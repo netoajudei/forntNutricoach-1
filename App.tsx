@@ -1,73 +1,80 @@
+"use client";
 
-
-
-import React, { useState } from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
-
-import { LoginPage, RegisterPage } from './pages/AuthPage';
-import OnboardingPage from './pages/OnboardingPage';
-import DashboardPage from './pages/DashboardPage';
-import { DietaPage } from './pages/DietaPage';
-import { TreinoPage } from './pages/TreinoPage';
-import { ProgressoPage } from './pages/ProgressoPage';
-import PerfilPage from './pages/PerfilPage';
-import MainLayout from './app/app/layout';
-import { DietaMetricasPage } from './pages/DietaMetricasPage';
-import { ProgressoMetricasPage } from './pages/ProgressoMetricasPage';
-import { TreinoMetricasPage } from './pages/TreinoMetricasPage';
-
-// A component that protects routes that require authentication.
-// If the user is not authenticated, it redirects them to the login page.
-const ProtectedLayout: React.FC<{ isAllowed: boolean; onLogout: () => void }> = ({ isAllowed, onLogout }) => {
-  if (!isAllowed) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // If allowed, it renders the main layout, passing the logout handler to it.
-  return (
-    <MainLayout onLogout={onLogout}>
-      <Outlet />
-    </MainLayout>
-  );
-};
+import React, { useEffect } from 'react';
+import { usePathname, useRouter } from './routing';
+import AppLayout from './app/(app)/layout';
+import DashboardPage from './app/(app)/dashboard/page';
+import DietaPage from './app/(app)/dieta/page';
+import TreinoPage from './app/(app)/treino/page';
+import ProgressoPage from './app/(app)/progresso/page';
+import PerfilPage from './app/(app)/perfil/page';
+import DietaMetricasPage from './app/(app)/dieta/metricas/page';
+import ProgressoMetricasPage from './app/(app)/progresso/metricas/page';
+import TreinoMetricasPage from './app/(app)/treino/metricas/page';
+import LoginPage from './app/login/page';
+import RegisterPage from './app/register/page';
+import OnboardingPage from './app/onboarding/page';
 
 const App: React.FC = () => {
-  // This state now controls access to the entire authenticated part of the app.
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const pathname = usePathname();
+    const router = useRouter();
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
-  
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-  };
-  
-  return (
-    <Routes>
-      {/* --- PUBLIC & ONBOARDING ROUTES --- */}
-      <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-      <Route path="/register" element={<RegisterPage />} />
-      {/* The new, unified onboarding route */}
-      <Route path="/onboarding" element={<OnboardingPage onComplete={handleLogin} />} />
+    useEffect(() => {
+        // If the user is at the root, redirect to login.
+        if (pathname === '/') {
+            router.replace('/login');
+        }
+    }, [pathname, router]);
+
+    const renderPage = () => {
+        switch (pathname) {
+            case '/dashboard':
+                return <DashboardPage />;
+            case '/dieta':
+                return <DietaPage />;
+            case '/treino':
+                return <TreinoPage />;
+            case '/progresso':
+                return <ProgressoPage />;
+            case '/perfil':
+                return <PerfilPage />;
+            case '/dieta/metricas':
+                return <DietaMetricasPage />;
+            case '/progresso/metricas':
+                return <ProgressoMetricasPage />;
+            case '/treino/metricas':
+                return <TreinoMetricasPage />;
+            case '/login':
+                return <LoginPage />;
+            case '/register':
+                return <RegisterPage />;
+            case '/onboarding':
+                return <OnboardingPage />;
+            default:
+                // For any unknown route, redirect to dashboard or login
+                // This prevents showing a blank page if the hash is invalid
+                if (pathname && pathname !== '/') {
+                   router.replace('/login');
+                }
+                return null;
+        }
+    };
+    
+    const isAppPage = [
+        '/dashboard', '/dieta', '/treino', '/progresso', '/perfil',
+        '/dieta/metricas', '/progresso/metricas', '/treino/metricas'
+    ].includes(pathname);
 
 
-      {/* --- PROTECTED MAIN APP ROUTES --- */}
-      <Route path="/" element={<ProtectedLayout isAllowed={isAuthenticated} onLogout={handleLogout} />}>
-        <Route index element={<Navigate to="/dashboard" replace />} />
-        <Route path="dashboard" element={<DashboardPage />} />
-        <Route path="dieta" element={<DietaPage />} />
-        <Route path="dieta/metricas" element={<DietaMetricasPage />} />
-        <Route path="treino" element={<TreinoPage />} />
-        <Route path="treino/metricas" element={<TreinoMetricasPage />} />
-        <Route path="progresso" element={<ProgressoPage />} />
-        <Route path="progresso/metricas" element={<ProgressoMetricasPage />} />
-        <Route path="perfil" element={<PerfilPage />} />
-        {/* Any other authenticated route will redirect to the dashboard */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Route>
-    </Routes>
-  );
+    if (pathname === '/') {
+        return <div className="w-screen h-screen flex items-center justify-center bg-gray-50"><div className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div></div>;
+    }
+
+    if (isAppPage) {
+        return <AppLayout>{renderPage()}</AppLayout>;
+    }
+
+    return renderPage();
 };
 
 export default App;
