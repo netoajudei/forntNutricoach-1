@@ -8,7 +8,7 @@ import OnboardingPage from './pages/OnboardingPage';
 import DashboardPage from './pages/DashboardPage';
 import { DietaPage } from './pages/DietaPage';
 import { TreinoPage } from './pages/TreinoPage';
-import { ProgressoPage, ProgressoPesoPage, ProgressoTreinoPage } from './pages/ProgressoPage';
+import { ProgressoPage } from './pages/ProgressoPage';
 import PerfilPage from './pages/PerfilPage';
 import MainLayout from './app/app/layout';
 
@@ -55,11 +55,9 @@ const App: React.FC = () => {
         <Route path="dieta" element={<DietaPage />} />
         <Route path="treino" element={<TreinoPage />} />
         <Route path="progresso" element={<ProgressoPage />} />
-        <Route path="progresso/peso" element={<ProgressoPesoPage />} />
-        <Route path="progresso/treino" element={<ProgressoTreinoPage />} />
         <Route path="perfil" element={<PerfilPage />} />
         {/* Any other authenticated route will redirect to the dashboard */}
-        <Route path="*" element="<Navigate to="/dashboard" replace />" />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
     </Routes>
   );
