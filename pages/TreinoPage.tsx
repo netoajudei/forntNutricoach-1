@@ -10,6 +10,7 @@ const ExerciseDetail: React.FC<{ exercise: Exercise }> = ({ exercise }) => (
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-600 mt-2">
             <span><strong>Séries:</strong> {exercise.sets}</span>
             <span><strong>Reps:</strong> {exercise.reps}</span>
+            {exercise.load && <span><strong>Carga:</strong> {exercise.load}</span>}
             <span><strong>Descanso:</strong> {exercise.rest}</span>
         </div>
         {exercise.observation && (

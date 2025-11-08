@@ -39,6 +39,7 @@ export interface Exercise {
   sets: string;
   reps: string;
   rest: string;
+  load?: string;
   observation?: string;
 }
 
@@ -69,6 +70,81 @@ export interface WorkoutAnalytics {
   loads: { exercise: string; value: number }[];
   volume: { month: string; value: number }[];
 }
+
+export interface WeeklyMacroSummary {
+  day: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+export interface MonthlyMacroSummary {
+  week: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+export interface AnnualMacroSummary {
+  month: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+}
+
+export interface DietMetricsSummary {
+    averageAdherence: number;
+    daysOnPlan: number;
+}
+
+export interface BodyMetricsHistoryEntry {
+  date: string;
+  weight: number;
+  fatPercentage: number;
+  neck: number;
+  chest: number;
+  waist: number;
+  hips: number;
+  rightArm: number;
+  leftArm: number;
+  rightThigh: number;
+  leftThigh: number;
+}
+
+export interface BodyMetricsSummary {
+  currentWeight: number;
+  fatPercentage: number;
+  totalWeightChange: number;
+}
+
+export interface WorkoutMetricsSummary {
+    workoutsThisMonth: number;
+    totalWorkoutsInMonth: number;
+    adherence: number;
+}
+
+export interface ExerciseLoadHistory {
+    workoutType: string;
+    exercises: {
+        name: string;
+        history: {
+            date: string;
+            load: number;
+        }[];
+    }[];
+}
+
+export interface WeeklyCompletionHistory {
+    week: string;
+    days: {
+        day: string;
+        completed: boolean;
+    }[];
+}
+
 
 // --- Onboarding Data Structure ---
 

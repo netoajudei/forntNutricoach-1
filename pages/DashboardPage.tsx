@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { userService } from '../services';
 import type { UserProfile } from '../types';
+import { useQuery } from '../hooks';
 import { Card, Skeleton, ChevronRightIcon, FlameIcon, DumbbellIcon, LineChartIcon } from '../components';
 
 const QuickLinkCard: React.FC<{to: string, title: string, description: string, icon: React.ElementType}> = ({ to, title, description, icon: Icon }) => (
