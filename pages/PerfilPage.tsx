@@ -6,12 +6,12 @@ import { Card, Button, Skeleton, Dialog, ChevronRightIcon } from '../components'
 import { useQuery } from '../hooks';
 
 // Reusable Accordion Item
-const AccordionItem: React.FC<{ title: string; isOpen: boolean; onToggle: () => void; onEdit: () => void; children: React.ReactNode; }> = ({ title, isOpen, onToggle, onEdit, children }) => (
+const AccordionItem: React.FC<{ title: string; isOpen: boolean; onToggle: () => void; onEdit?: () => void; children: React.ReactNode; }> = ({ title, isOpen, onToggle, onEdit, children }) => (
   <Card className="!p-0 overflow-hidden">
     <div className="flex items-center justify-between cursor-pointer p-6" onClick={onToggle}>
       <h2 className="text-lg font-bold text-green-900">{title}</h2>
       <div className="flex items-center space-x-4">
-        <Button variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(); }}>Editar</Button>
+        {onEdit && <Button variant="ghost" onClick={(e) => { e.stopPropagation(); onEdit(); }}>Editar</Button>}
         <ChevronRightIcon className={`h-6 w-6 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`} />
       </div>
     </div>
@@ -133,6 +133,32 @@ const PerfilPage: React.FC = () => {
                         onEdit={() => setEditingSection('treino')}
                     >
                         <InfoGrid data={userData.preferenciasTreino} />
+                    </AccordionItem>
+
+                    <AccordionItem
+                        title="Informações do Nutricionista"
+                        isOpen={openAccordion === 'nutricionista'}
+                        onToggle={() => handleToggle('nutricionista')}
+                    >
+                        <div className="pt-4 text-sm text-gray-600 space-y-2">
+                            <p><span className="font-semibold text-green-900">Nome:</span> Dr. Carlos Andrade</p>
+                            <p><span className="font-semibold text-green-900">CRN:</span> 12345/SP</p>
+                            <p><span className="font-semibold text-green-900">Especialidade:</span> Nutrição Esportiva</p>
+                            <p className="pt-2">Seu plano foi cuidadosamente elaborado para atender seus objetivos de recomposição corporal, focando em uma alta ingestão de proteínas e carboidratos complexos. Qualquer dúvida, entre em contato.</p>
+                        </div>
+                    </AccordionItem>
+
+                    <AccordionItem
+                        title="Informações do Personal Trainer"
+                        isOpen={openAccordion === 'personal'}
+                        onToggle={() => handleToggle('personal')}
+                    >
+                        <div className="pt-4 text-sm text-gray-600 space-y-2">
+                            <p><span className="font-semibold text-green-900">Nome:</span> Ana Souza</p>
+                            <p><span className="font-semibold text-green-900">CREF:</span> 54321-G/SP</p>
+                            <p><span className="font-semibold text-green-900">Especialidade:</span> Treinamento de Força e Hipertrofia</p>
+                            <p className="pt-2">Seu programa de treino foi estruturado com base no método de progressão de carga. Lembre-se de focar na execução correta dos movimentos para evitar lesões e maximizar os resultados. Bons treinos!</p>
+                        </div>
                     </AccordionItem>
                 </div>
             </div>
