@@ -1,6 +1,7 @@
 
+
 import React, { useState } from 'react';
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'https://aistudiocdn.com/recharts@^2.12.7';
 import { dietService } from '../services';
 import type { DietMetricsSummary, WeeklyMacroSummary, MonthlyMacroSummary, AnnualMacroSummary } from '../types';
 import { Card, Skeleton } from '../components';

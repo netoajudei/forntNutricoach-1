@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { 
     ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
     RadialBarChart, RadialBar, PolarAngleAxis, BarChart, Bar 
-} from 'recharts';
+} from 'https://aistudiocdn.com/recharts@^2.12.7';
 import { progressService, workoutService, dietService } from '../services';
 import type { ProgressSummary, WeeklyWorkoutDay, WeightHistoryEntry, WeeklyMacroSummary } from '../types';
 import { Card, Skeleton } from '../components';

@@ -1,7 +1,8 @@
 
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'https://aistudiocdn.com/recharts@^2.12.7';
 import { workoutService } from '../services';
 import type { WorkoutMetricsSummary, WeeklyWorkoutDay, Exercise, ExerciseLoadHistory, WeeklyCompletionHistory, WorkoutAnalytics } from '../types';
 import { Card, Skeleton, Button, Dialog } from '../components';

@@ -1,6 +1,7 @@
 
+
 import React from 'react';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'https://aistudiocdn.com/recharts@^2.12.7';
 import { progressService, userService } from '../services';
 import type { BodyMetricsHistoryEntry, BodyMetricsSummary, UserProfile } from '../types';
 import { Card, Skeleton, Progress } from '../components';
