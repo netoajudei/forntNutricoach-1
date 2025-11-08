@@ -6,15 +6,15 @@ import type { UserProfile } from '../types';
 import { Card, Skeleton, ChevronRightIcon, FlameIcon, DumbbellIcon, LineChartIcon } from '../components';
 
 const QuickLinkCard: React.FC<{to: string, title: string, description: string, icon: React.ElementType}> = ({ to, title, description, icon: Icon }) => (
-    <Link to={to}>
-        <Card className="hover:border-brand-500 hover:shadow-lg transition-all group">
+    <Link to={to} className="group">
+        <Card>
             <div className="flex justify-between items-start">
                 <div>
-                    <div className="p-2 bg-brand-100 dark:bg-brand-900 rounded-lg inline-block mb-3">
-                        <Icon className="h-6 w-6 text-brand-600 dark:text-brand-400" />
+                    <div className="p-3 bg-green-100 rounded-xl inline-block mb-4">
+                        <Icon className="h-6 w-6 text-green-600" />
                     </div>
-                    <h3 className="font-semibold text-lg">{title}</h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">{description}</p>
+                    <h3 className="font-bold text-lg text-green-900">{title}</h3>
+                    <p className="text-gray-500 text-sm">{description}</p>
                 </div>
                 <ChevronRightIcon className="h-5 w-5 text-gray-400 group-hover:translate-x-1 transition-transform" />
             </div>
@@ -46,8 +46,8 @@ const DashboardPage: React.FC = () => {
             </>
         ) : (
             <div className="mb-8">
-                <h1 className="text-3xl font-bold tracking-tight">Olá, {user?.name}!</h1>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">Bem-vindo(a) de volta. Pronto para o seu dia?</p>
+                <h1 className="text-4xl font-extrabold tracking-tight text-green-900">Olá, {user?.name}!</h1>
+                <p className="text-gray-500 mt-1 text-lg">Bem-vindo(a) de volta. Pronto para o seu dia?</p>
             </div>
         )}
 
@@ -74,8 +74,8 @@ const DashboardPage: React.FC = () => {
 
         <div className="mt-8">
             <Card>
-                <h2 className="text-xl font-semibold mb-4">Avisos e Dicas</h2>
-                <p className="text-gray-600 dark:text-gray-300">
+                <h2 className="text-xl font-bold text-green-900 mb-4">Avisos e Dicas</h2>
+                <p className="text-gray-600">
                     Lembre-se de manter a hidratação ao longo do dia. A meta de hoje é de 3 litros de água. Bons treinos!
                 </p>
             </Card>

@@ -1,4 +1,5 @@
 
+
 export interface UserProfile {
   name: string;
   email: string;
@@ -18,7 +19,7 @@ export interface Meal {
   protein: number;
   carbs: number;
   fats: number;
-  items: { name: string; quantity: string }[];
+  description: string;
 }
 
 export interface DailyDietSummary {
@@ -41,18 +42,15 @@ export interface Exercise {
   observation?: string;
 }
 
-export interface TodaysWorkout {
-  isRestDay: boolean;
-  name?: string;
-  focus?: string;
-  exercises?: Exercise[];
-}
-
 export interface WeeklyWorkoutDay {
   day: string;
   name: string;
   focus: string;
+  isRestDay: boolean;
+  isCompleted: boolean;
+  exercises?: Exercise[];
 }
+
 
 export interface WeightHistoryEntry {
   date: string;
@@ -70,4 +68,65 @@ export interface WorkoutAnalytics {
   frequency: { month: string; value: number }[];
   loads: { exercise: string; value: number }[];
   volume: { month: string; value: number }[];
+}
+
+// --- Onboarding Data Structure ---
+
+export interface MedidasCorporais {
+  data: string;
+  peso: string;
+  altura: string;
+  pescoco: string;
+  peito: string;
+  cintura: string;
+  quadril: string;
+  bracoDireito: string;
+  bracoEsquerdo: string;
+  coxaDireita: string;
+  coxaEsquerda: string;
+  panturrilhaDireita: string;
+  panturrilhaEsquerda: string;
+  gordura?: string;
+  notas?: string;
+}
+
+export interface OnboardingData {
+  dadosBasicos: {
+    nomeCompleto: string;
+    dataNascimento: string;
+    sexo: string;
+  };
+  saude: {
+    condicoesMedicas: string;
+    medicacoes: string;
+    alergias: string;
+  };
+  lesoes: {
+    lesoesLimitacoes: string;
+  };
+  rotina: {
+    profissao: string;
+    horarioAcordar: string;
+    horarioDormir: string;
+  };
+  preferenciasAlimentares: {
+    restricoes: string[];
+    alimentosNaoGosta: string;
+    alimentosFavoritos: string;
+    disposicaoCozinhar: string;
+    orcamento: string;
+  };
+  preferenciasTreino: {
+    local: string;
+    equipamentos: string[];
+    experiencia: string;
+    diasPreferenciais: string[];
+    horariosPreferenciais: string[];
+  };
+  objetivo: {
+    meta: string;
+    prazo: string;
+    motivacao: string;
+  };
+  medidasCorporais: MedidasCorporais;
 }

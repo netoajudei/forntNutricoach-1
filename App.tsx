@@ -1,65 +1,65 @@
+
+
 import React, { useState } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 
-import { OnboardingLayout, AnamnesePage, ObjetivoPage, PreferenciasPage, GerandoPage } from './pages/OnboardingPage';
+import { LoginPage, RegisterPage } from './pages/AuthPage';
+import OnboardingPage from './pages/OnboardingPage';
 import DashboardPage from './pages/DashboardPage';
-import { DietaPage, PlanoSemanalDietaPage } from './pages/DietaPage';
-import { TreinoPage, ProgramaSemanalTreinoPage } from './pages/TreinoPage';
+import { DietaPage } from './pages/DietaPage';
+import { TreinoPage } from './pages/TreinoPage';
 import { ProgressoPage, ProgressoPesoPage, ProgressoTreinoPage } from './pages/ProgressoPage';
 import PerfilPage from './pages/PerfilPage';
 import MainLayout from './app/app/layout';
 
-// Wrapper for the onboarding layout to pass the onComplete callback
-const OnboardingLayoutRoute: React.FC<{ onComplete: () => void }> = ({ onComplete }) => (
-  <OnboardingLayout>
-    <Outlet context={{ onComplete }} />
-  </OnboardingLayout>
-);
-
-// A new component that acts as a "protected route" for the main application.
-// It checks if onboarding is complete. If not, it redirects to the onboarding flow.
-const ProtectedAppLayout: React.FC<{ isAllowed: boolean }> = ({ isAllowed }) => {
+// A component that protects routes that require authentication.
+// If the user is not authenticated, it redirects them to the login page.
+const ProtectedLayout: React.FC<{ isAllowed: boolean; onLogout: () => void }> = ({ isAllowed, onLogout }) => {
   if (!isAllowed) {
-    return <Navigate to="/onboarding/anamnese" replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  // If allowed, it renders the main layout with the nested routes.
+  // If allowed, it renders the main layout, passing the logout handler to it.
   return (
-    <MainLayout>
+    <MainLayout onLogout={onLogout}>
       <Outlet />
     </MainLayout>
   );
 };
 
-
 const App: React.FC = () => {
-  // This state determines whether to show the onboarding or the main app.
-  const [onboardingComplete, setOnboardingComplete] = useState(false);
+  // This state now controls access to the entire authenticated part of the app.
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+  
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+  };
   
   return (
     <Routes>
-      {/* Onboarding Routes (rendered without the main app layout/sidebar) */}
-      <Route element={<OnboardingLayoutRoute onComplete={() => setOnboardingComplete(true)} />}>
-        <Route path="/onboarding" element={<Navigate to="/onboarding/anamnese" replace />} />
-        <Route path="/onboarding/anamnese" element={<AnamnesePage />} />
-        <Route path="/onboarding/objetivo" element={<ObjetivoPage />} />
-        <Route path="/onboarding/preferencias" element={<PreferenciasPage />} />
-        <Route path="/onboarding/gerando" element={<GerandoPage />} />
-      </Route>
+      {/* --- PUBLIC & ONBOARDING ROUTES --- */}
+      <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+      <Route path="/register" element={<RegisterPage />} />
+      {/* The new, unified onboarding route */}
+      <Route path="/onboarding" element={<OnboardingPage onComplete={handleLogin} />} />
 
-      {/* Main App Routes (now wrapped in the protected layout) */}
-      <Route path="/" element={<ProtectedAppLayout isAllowed={onboardingComplete} />}>
+
+      {/* --- PROTECTED MAIN APP ROUTES --- */}
+      <Route path="/" element={<ProtectedLayout isAllowed={isAuthenticated} onLogout={handleLogout} />}>
         <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="dieta" element={<DietaPage />} />
-        <Route path="dieta/plano-semanal" element={<PlanoSemanalDietaPage />} />
         <Route path="treino" element={<TreinoPage />} />
-        <Route path="treino/programa-semanal" element={<ProgramaSemanalTreinoPage />} />
         <Route path="progresso" element={<ProgressoPage />} />
         <Route path="progresso/peso" element={<ProgressoPesoPage />} />
         <Route path="progresso/treino" element={<ProgressoTreinoPage />} />
         <Route path="perfil" element={<PerfilPage />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* Any other authenticated route will redirect to the dashboard */}
+        <Route path="*" element="<Navigate to="/dashboard" replace />" />
       </Route>
     </Routes>
   );

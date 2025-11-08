@@ -1,12 +1,13 @@
 
 import { 
   mockUser, mockDailyDietSummary, mockDailyMeals, mockWeeklyDietPlan,
-  mockTodaysWorkout, mockWeeklyWorkoutProgram, mockWeightHistory,
-  mockProgressSummary, mockWorkoutAnalytics 
+  mockWeeklyWorkoutProgram, mockWeightHistory,
+  mockProgressSummary, mockWorkoutAnalytics,
+  mockOnboardingData
 } from './mocks';
 import type { 
-  UserProfile, DailyDietSummary, Meal, WeeklyDietDay, TodaysWorkout, 
-  WeeklyWorkoutDay, WeightHistoryEntry, ProgressSummary, WorkoutAnalytics 
+  UserProfile, DailyDietSummary, Meal, WeeklyDietDay, 
+  WeeklyWorkoutDay, WeightHistoryEntry, ProgressSummary, WorkoutAnalytics, OnboardingData
 } from './types';
 
 const API_DELAY = 800; // Simulate network latency in milliseconds
@@ -21,6 +22,7 @@ const simulateApiCall = <T,>(data: T): Promise<T> => {
 
 export const userService = {
   getProfile: (): Promise<UserProfile> => simulateApiCall(mockUser),
+  getOnboardingData: (): Promise<OnboardingData> => simulateApiCall(mockOnboardingData),
 };
 
 export const dietService = {
@@ -30,7 +32,6 @@ export const dietService = {
 };
 
 export const workoutService = {
-  getTodaysWorkout: (): Promise<TodaysWorkout> => simulateApiCall(mockTodaysWorkout),
   getWeeklyProgram: (): Promise<WeeklyWorkoutDay[]> => simulateApiCall(mockWeeklyWorkoutProgram),
   getWorkoutAnalytics: (): Promise<WorkoutAnalytics> => simulateApiCall(mockWorkoutAnalytics),
 };

@@ -7,30 +7,23 @@ interface CardProps {
   className?: string;
 }
 export const Card: React.FC<CardProps> = ({ children, className = '' }) => (
-  <div className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm p-4 sm:p-6 ${className}`}>
+  <div className={`bg-white rounded-2xl shadow-lg p-6 transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02] ${className}`}>
     {children}
   </div>
 );
 
-// FIX: Add size prop to support different button dimensions.
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost';
-  size?: 'sm' | 'md';
 }
-export const Button: React.FC<ButtonProps> = ({ children, className = '', variant = 'primary', size = 'md', ...props }) => {
-  const baseClasses = "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
+export const Button: React.FC<ButtonProps> = ({ children, className = '', variant = 'primary', ...props }) => {
+  const baseClasses = "inline-flex items-center justify-center rounded-xl text-sm font-semibold transition-all duration-300 transform focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none";
   const variantClasses = {
-    primary: "bg-brand-600 text-white hover:bg-brand-700",
-    secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
-    ghost: "hover:bg-gray-100 dark:hover:bg-gray-800",
-  };
-  // FIX: Implement size classes to replace hardcoded padding and handle different button sizes.
-  const sizeClasses = {
-    sm: "px-3 py-1.5 text-xs",
-    md: "px-4 py-2",
+    primary: "bg-gradient-to-r from-green-400 to-blue-500 text-white px-6 py-3 hover:shadow-lg hover:scale-105",
+    secondary: "bg-white text-green-500 border border-green-500 px-5 py-2.5 hover:bg-green-50 hover:scale-105",
+    ghost: "text-green-600 hover:bg-green-50 px-4 py-2",
   };
   return (
-    <button className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`} {...props}>
+    <button className={`${baseClasses} ${variantClasses[variant]} ${className}`} {...props}>
       {children}
     </button>
   );
@@ -40,7 +33,7 @@ interface SkeletonProps {
   className?: string;
 }
 export const Skeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
-  <div className={`animate-pulse rounded-md bg-gray-200 dark:bg-gray-700 ${className}`} />
+  <div className={`animate-pulse rounded-md bg-gray-200 ${className}`} />
 );
 
 interface ProgressProps {
@@ -48,8 +41,8 @@ interface ProgressProps {
   className?: string;
 }
 export const Progress: React.FC<ProgressProps> = ({ value, className = '' }) => (
-  <div className={`relative h-2 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700 ${className}`}>
-    <div className="h-full w-full flex-1 bg-brand-600 transition-all" style={{ transform: `translateX(-${100 - (value || 0)}%)` }} />
+  <div className={`relative h-2.5 w-full overflow-hidden rounded-full bg-gray-200 ${className}`}>
+    <div className="h-full w-full flex-1 bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-500 ease-out" style={{ transform: `translateX(-${100 - (value || 0)}%)` }} />
   </div>
 );
 
@@ -60,7 +53,7 @@ interface TabsProps {
 }
 export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange }) => (
   <div>
-    <div className="border-b border-gray-200 dark:border-gray-700">
+    <div className="border-b border-gray-200">
       <nav className="-mb-px flex space-x-6" aria-label="Tabs">
         {tabs.map((tab) => (
           <button
@@ -68,8 +61,8 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabChange }) => (
             onClick={() => onTabChange(tab)}
             className={`${
               tab === activeTab
-                ? 'border-brand-500 text-brand-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                ? 'border-green-500 text-green-600 font-semibold'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
           >
             {tab}
@@ -93,23 +86,23 @@ export const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60"
       aria-labelledby="dialog-title"
       role="dialog"
       aria-modal="true"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg m-4 bg-white dark:bg-gray-800 rounded-xl shadow-xl"
+        className="relative w-full max-w-lg m-4 bg-white rounded-2xl shadow-xl"
         onClick={e => e.stopPropagation()} // Prevent closing when clicking inside
       >
-        <div className="flex items-start justify-between p-4 border-b rounded-t dark:border-gray-600">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white" id="dialog-title">
+        <div className="flex items-start justify-between p-5 border-b rounded-t border-gray-200">
+          <h3 className="text-xl font-semibold text-green-900" id="dialog-title">
             {title}
           </h3>
           <button
             type="button"
-            className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-600 dark:hover:text-white"
+            className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center"
             onClick={onClose}
             aria-label="Close"
           >
@@ -120,7 +113,7 @@ export const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children
           {children}
         </div>
         {footer && (
-          <div className="flex items-center justify-end p-6 space-x-2 border-t border-gray-200 rounded-b dark:border-gray-600">
+          <div className="flex items-center justify-end p-6 space-x-3 border-t border-gray-200 rounded-b">
             {footer}
           </div>
         )}
