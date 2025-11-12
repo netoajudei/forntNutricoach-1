@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
-import { useRouter } from '../../routing';
-import { Card, Button } from '../../components';
-import type { OnboardingData, MedidasCorporais } from '../../types';
+import { useRouter } from 'next/navigation';
+import { Card, Button } from '@/components';
+import type { OnboardingData, MedidasCorporais } from '@/lib/types';
+import { salvarOnboarding } from '@/lib/services/onboarding.service';
 
 const TOTAL_STEPS = 9;
 
@@ -126,12 +127,36 @@ const RotinaStep: React.FC<{ data: OnboardingData['rotina']; updateData: (field:
     </FormSection>
 );
 
-const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferenciasAlimentares']; updateData: (field: keyof OnboardingData['preferenciasAlimentares'], value: any) => void }> = ({ data, updateData }) => (
+const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferenciasAlimentares']; updateData: (field: keyof OnboardingData['preferenciasAlimentares'], value: any) => void }> = ({ data, updateData }) => {
+    // Converter array de restrições para string para exibição no input
+    const restricoesTexto = Array.isArray(data.restricoes) ? data.restricoes.join(', ') : '';
+    
+    const handleRestricoesChange = (texto: string) => {
+        // Converter string para array (separar por vírgula)
+        const array = texto.split(',').map(item => item.trim()).filter(item => item.length > 0);
+        updateData('restricoes', array);
+    };
+
+    return (
     <FormSection title="Preferências Alimentares" subtitle="Vamos montar uma dieta que você goste.">
-        <label className="text-sm font-medium">Restrições alimentares</label>
-        <MultiSelectButtons options={['Vegetariano', 'Vegano', 'Sem Glúten', 'Sem Lactose']} selected={data.restricoes} onChange={value => updateData('restricoes', value)} />
-        <FormTextarea label="Alimentos que não gosta" value={data.alimentosNaoGosta} onChange={e => updateData('alimentosNaoGosta', e.target.value)} />
-        <FormTextarea label="Alimentos favoritos" value={data.alimentosFavoritos} onChange={e => updateData('alimentosFavoritos', e.target.value)} />
+            <FormTextarea 
+                label="Restrições alimentares (digite separadas por vírgula, ex: Vegetariano, Sem Lactose, Alergia a amendoim)" 
+                value={restricoesTexto} 
+                onChange={e => handleRestricoesChange(e.target.value)}
+                placeholder="Ex: Vegetariano, Sem Lactose, Alergia a amendoim"
+            />
+            <FormTextarea 
+                label="Alimentos que não gosta (digite separados por vírgula)" 
+                value={data.alimentosNaoGosta} 
+                onChange={e => updateData('alimentosNaoGosta', e.target.value)}
+                placeholder="Ex: Jiló, Fígado, Couve"
+            />
+            <FormTextarea 
+                label="Alimentos favoritos (digite separados por vírgula)" 
+                value={data.alimentosFavoritos} 
+                onChange={e => updateData('alimentosFavoritos', e.target.value)}
+                placeholder="Ex: Frango, Batata doce, Brócolis"
+            />
         <FormSelect label="Disposição para cozinhar" value={data.disposicaoCozinhar} onChange={e => updateData('disposicaoCozinhar', e.target.value)}>
             <option value="">Selecione...</option>
             <option value="baixa">Baixa</option>
@@ -146,6 +171,7 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
         </FormSelect>
     </FormSection>
 );
+};
 
 const PreferenciasTreinoStep: React.FC<{ data: OnboardingData['preferenciasTreino']; updateData: (field: keyof OnboardingData['preferenciasTreino'], value: any) => void }> = ({ data, updateData }) => (
     <FormSection title="Preferências de Treino" subtitle="Onde e como você prefere treinar?">
@@ -172,16 +198,30 @@ const PreferenciasTreinoStep: React.FC<{ data: OnboardingData['preferenciasTrein
 );
 
 const ObjetivoStep: React.FC<{ data: OnboardingData['objetivo']; updateData: (field: keyof OnboardingData['objetivo'], value: string) => void }> = ({ data, updateData }) => (
-    <FormSection title="Seu Objetivo Principal" subtitle="O que você quer alcançar?">
-        <FormSelect label="Tipo de meta" value={data.meta} onChange={e => updateData('meta', e.target.value)}>
-            <option value="">Selecione...</option>
-            <option value="perder peso">Perder Peso</option>
-            <option value="ganhar massa">Ganhar Massa</option>
-            <option value="manter">Manter</option>
-            <option value="recomposicao">Recomposição Corporal</option>
-        </FormSelect>
-        <FormInput label="Prazo desejado" type="date" value={data.prazo} onChange={e => updateData('prazo', e.target.value)} />
-        <FormTextarea label="Motivação: por que isso é importante para você?" value={data.motivacao} onChange={e => updateData('motivacao', e.target.value)} />
+    <FormSection title="Metas de Medidas Corporais" subtitle="Defina sua meta focada em medidas corporais.">
+        <FormInput 
+            label="Nome da Meta" 
+            type="text" 
+            value={data.meta} 
+            onChange={e => updateData('meta', e.target.value)}
+            placeholder="Ex: Perder 10kg, Ganhar massa muscular"
+        />
+        <FormInput 
+            label="Valor Inicial (kg)" 
+            type="number" 
+            step="0.1" 
+            value={data.prazo} 
+            onChange={e => updateData('prazo', e.target.value)}
+            placeholder="Ex: 85.5"
+        />
+        <FormInput 
+            label="Valor Final/Meta (kg)" 
+            type="number" 
+            step="0.1" 
+            value={data.motivacao} 
+            onChange={e => updateData('motivacao', e.target.value)}
+            placeholder="Ex: 75.0"
+        />
     </FormSection>
 );
 
@@ -256,16 +296,27 @@ export default function OnboardingPage() {
         }));
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (step < TOTAL_STEPS) {
             setStep(s => s + 1);
         } else {
             setIsFinalizing(true);
-            console.log("Onboarding Data Submitted:", data);
-            setTimeout(() => {
-                // Em um app real, aqui você faria o "login" do usuário
-                router.push('/dashboard');
-            }, 2000);
+            try {
+                const result = await salvarOnboarding(data);
+                if (result?.success) {
+                    router.push('/dashboard');
+                    router.refresh();
+                } else {
+                    throw new Error('Falha ao salvar dados');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar onboarding:', error);
+                const errorMessage = error instanceof Error 
+                    ? error.message 
+                    : 'Erro desconhecido ao finalizar cadastro';
+                alert(`Erro: ${errorMessage}`);
+                setIsFinalizing(false);
+            }
         }
     };
 

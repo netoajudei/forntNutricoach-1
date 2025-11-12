@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Link } from '../../../routing';
-import { userService } from '../../../services';
-import type { UserProfile } from '../../../types';
-import { Card, ChevronRightIcon, FlameIcon, DumbbellIcon, LineChartIcon, Skeleton } from '../../../components';
+import Link from 'next/link';
+import { userService } from '@/lib/services';
+import type { UserProfile } from '@/lib/types';
+import { Card, ChevronRightIcon, FlameIcon, DumbbellIcon, LineChartIcon, Skeleton } from '@/components';
 
 function useQuery<T>(queryFn: () => Promise<T>) {
   const [data, setData] = useState<T | null>(null);

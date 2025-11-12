@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { workoutService } from '../../../services';
-import type { WeeklyWorkoutDay, Exercise } from '../../../types';
-import { Card, Button, Skeleton, Dialog } from '../../../components';
+import { workoutService } from '@/lib/services';
+import type { WeeklyWorkoutDay, Exercise } from '@/lib/types';
+import { Card, Button, Skeleton, Dialog } from '@/components';
 
 function useQuery<T>(queryFn: () => Promise<T>) {
   const [data, setData] = useState<T | null>(null);

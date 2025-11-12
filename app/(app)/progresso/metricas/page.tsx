@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Link } from '../../../../routing';
-import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area } from 'https://aistudiocdn.com/recharts@^2.12.7';
-import { progressService } from '../../../../services';
-import type { BodyMetricsHistoryEntry, BodyMetricsSummary } from '../../../../types';
-import { Card, Skeleton, Tabs } from '../../../../components';
+import Link from 'next/link';
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, AreaChart, Area } from 'recharts';
+import { progressService } from '@/lib/services';
+import type { BodyMetricsHistoryEntry, BodyMetricsSummary } from '@/lib/types';
+import { Card, Skeleton, Tabs } from '@/components';
 
 function useQuery<T>(queryFn: () => Promise<T>) {
   const [data, setData] = useState<T | null>(null);

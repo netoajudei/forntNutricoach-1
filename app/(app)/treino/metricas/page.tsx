@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Link } from '../../../../routing';
-import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'https://aistudiocdn.com/recharts@^2.12.7';
-import { workoutService } from '../../../../services';
-import type { WorkoutMetricsSummary, ExerciseLoadHistory, WeeklyCompletionHistory, WeeklyWorkoutDay } from '../../../../types';
-import { Card, Skeleton, Button, Dialog } from '../../../../components';
+import Link from 'next/link';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
+import { workoutService } from '@/lib/services';
+import type { WorkoutMetricsSummary, ExerciseLoadHistory, WeeklyCompletionHistory, WeeklyWorkoutDay } from '@/lib/types';
+import { Card, Skeleton, Button, Dialog } from '@/components';
 
 function useQuery<T>(queryFn: () => Promise<T>) {
   const [data, setData] = useState<T | null>(null);

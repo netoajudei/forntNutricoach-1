@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { userService } from '../../../services';
-import type { UserProfile, OnboardingData } from '../../../types';
-import { Card, Button, Skeleton, Dialog } from '../../../components';
+import { useRouter } from 'next/navigation';
+import { userService } from '@/lib/services';
+import type { UserProfile, OnboardingData } from '@/lib/types';
+import { Card, Button, Skeleton, Dialog } from '@/components';
+import { createClient } from '@/lib/supabase/client';
 
 function useQuery<T>(queryFn: () => Promise<T>) {
   const [data, setData] = useState<T | null>(null);
@@ -20,6 +22,25 @@ function useQuery<T>(queryFn: () => Promise<T>) {
   }, [queryFn]);
   return { data, isLoading };
 }
+
+const getInitials = (fullName: string): string => {
+  const parts = (fullName || '').trim().split(/\s+/);
+  if (parts.length === 0) return '';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+const AvatarOrInitials: React.FC<{ name: string; avatarUrl?: string }> = ({ name, avatarUrl }) => {
+  if (avatarUrl) {
+    return <img className="h-24 w-24 rounded-full object-cover" src={avatarUrl} alt={name} />;
+  }
+  const initials = getInitials(name);
+  return (
+    <div className="h-24 w-24 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white text-2xl font-bold">
+      {initials}
+    </div>
+  );
+};
 
 const ProfileField: React.FC<{ label: string; value: string | number }> = ({ label, value }) => (
     <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
@@ -47,11 +68,50 @@ const InfoDetail: React.FC<{ label: string; value: any }> = ({ label, value }) =
 };
 
 export default function PerfilPage() {
+    const router = useRouter();
+    const supabase = createClient();
+    const handleLogout = async () => {
+      await supabase.auth.signOut();
+      router.push('/login');
+      router.refresh();
+    };
     const { data: user, isLoading: userLoading } = useQuery(userService.getProfile);
     const { data: onboardingData, isLoading: onboardingLoading } = useQuery(userService.getOnboardingData);
+    const { data: notes, isLoading: notesLoading } = useQuery(userService.getProfileNotes);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isNutriOpen, setIsNutriOpen] = useState(false);
+    const [isPersonalOpen, setIsPersonalOpen] = useState(false);
+    const [nutriText, setNutriText] = useState('');
+    const [personalText, setPersonalText] = useState('');
+    const [saving, setSaving] = useState(false);
 
-    const isLoading = userLoading || onboardingLoading;
+    useEffect(() => {
+      if (notes) {
+        setNutriText(notes.nutricionista || '');
+        setPersonalText(notes.personal || '');
+      }
+    }, [notes]);
+
+    const isLoading = userLoading || onboardingLoading || notesLoading;
+
+    const saveNutri = async () => {
+      try {
+        setSaving(true);
+        await userService.updateProfileNotes({ nutricionista: nutriText });
+        setIsNutriOpen(false);
+      } finally {
+        setSaving(false);
+      }
+    };
+    const savePersonal = async () => {
+      try {
+        setSaving(true);
+        await userService.updateProfileNotes({ personal: personalText });
+        setIsPersonalOpen(false);
+      } finally {
+        setSaving(false);
+      }
+    };
 
     return (
         <div className="p-4 sm:p-6 lg:p-8">
@@ -85,13 +145,19 @@ export default function PerfilPage() {
                     <>
                         <Card>
                             <div className="flex flex-col sm:flex-row items-start sm:items-center sm:space-x-6 mb-6">
-                                <img className="h-24 w-24 rounded-full object-cover mb-4 sm:mb-0" src={user.avatarUrl} alt={user.name} />
-                                <div>
+                                <div className="mb-4 sm:mb-0">
+                                    <AvatarOrInitials name={user.name} avatarUrl={user.avatarUrl} />
+                                </div>
+                                <div className="flex-1">
                                     <h2 className="text-2xl font-bold text-green-900">{user.name}</h2>
                                     <p className="text-gray-500">{user.email}</p>
                                 </div>
                             </div>
-                            
+                            <div className="md:hidden mb-4">
+                                <Button variant="secondary" className="w-full" onClick={handleLogout}>
+                                    Sair da conta
+                                </Button>
+                            </div>
                             <dl className="divide-y divide-gray-200">
                                 <ProfileField label="Idade" value={user.age} />
                                 <ProfileField label="Altura" value={`${user.height} cm`} />
@@ -107,14 +173,34 @@ export default function PerfilPage() {
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
                             <InfoCard title="Anotações do Nutricionista">
-                                <p className="text-gray-600 text-sm">
-                                    Foco em aumentar a ingestão de fibras e manter a hidratação. Acompanhar a digestão na primeira semana com a nova dieta. Cliente relata não gostar de jiló e fígado.
-                                </p>
+                                <div className="flex justify-between items-start">
+                                  <p className="text-gray-600 text-sm whitespace-pre-wrap">{nutriText || 'Sem anotações.'}</p>
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsNutriOpen(true)}
+                                    className="ml-4 p-2 text-gray-500 hover:text-green-600"
+                                    aria-label="Editar anotações do nutricionista"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-9.9 9.9A2 2 0 015.1 17.9L2 18l.1-3.1a2 2 0 01.586-1.414l9.9-9.9z" />
+                                    </svg>
+                                  </button>
+                                </div>
                             </InfoCard>
                             <InfoCard title="Anotações do Personal Trainer">
-                                <p className="text-gray-600 text-sm">
-                                    Atenção à execução do agachamento livre para proteger a lombar. Cliente reportou leve desconforto no ombro direito, então fortalecer manguito rotador com exercícios específicos.
-                                </p>
+                                <div className="flex justify-between items-start">
+                                  <p className="text-gray-600 text-sm whitespace-pre-wrap">{personalText || 'Sem anotações.'}</p>
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsPersonalOpen(true)}
+                                    className="ml-4 p-2 text-gray-500 hover:text-green-600"
+                                    aria-label="Editar anotações do personal"
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-9.9 9.9A2 2 0 015.1 17.9L2 18l.1-3.1a2 2 0 01.586-1.414l9.9-9.9z" />
+                                    </svg>
+                                  </button>
+                                </div>
                             </InfoCard>
                              <InfoCard title="Saúde e Lesões">
                                 <dl>
@@ -162,6 +248,46 @@ export default function PerfilPage() {
                     }
                 >
                     <p>Esta é uma funcionalidade de demonstração. Em uma aplicação real, aqui estaria um formulário para editar os dados do perfil.</p>
+                </Dialog>
+
+                <Dialog
+                  isOpen={isNutriOpen}
+                  onClose={() => setIsNutriOpen(false)}
+                  title="Anotações do Nutricionista"
+                  footer={
+                    <>
+                      <Button variant="secondary" onClick={() => setIsNutriOpen(false)}>Cancelar</Button>
+                      <Button onClick={saveNutri} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
+                    </>
+                  }
+                >
+                  <textarea
+                    className="w-full mt-1 px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                    rows={10}
+                    placeholder="Escreva observações, preferências e instruções..."
+                    value={nutriText}
+                    onChange={(e) => setNutriText(e.target.value)}
+                  />
+                </Dialog>
+
+                <Dialog
+                  isOpen={isPersonalOpen}
+                  onClose={() => setIsPersonalOpen(false)}
+                  title="Anotações do Personal Trainer"
+                  footer={
+                    <>
+                      <Button variant="secondary" onClick={() => setIsPersonalOpen(false)}>Cancelar</Button>
+                      <Button onClick={savePersonal} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
+                    </>
+                  }
+                >
+                  <textarea
+                    className="w-full mt-1 px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                    rows={10}
+                    placeholder="Escreva observações, preferências e instruções..."
+                    value={personalText}
+                    onChange={(e) => setPersonalText(e.target.value)}
+                  />
                 </Dialog>
             </div>
         </div>

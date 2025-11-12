@@ -3,8 +3,10 @@
 "use client";
 
 import React from 'react';
-import { Link, usePathname, useRouter } from '../../routing';
-import { HomeIcon, FlameIcon, DumbbellIcon, LineChartIcon, UserIcon, LogOutIcon } from '../../components';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { HomeIcon, FlameIcon, DumbbellIcon, LineChartIcon, UserIcon, LogOutIcon } from '@/components';
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: HomeIcon },
@@ -83,12 +85,12 @@ const BottomNavBar: React.FC = () => {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const supabase = createClient();
   
-  // Para este protótipo, o logout simplesmente redireciona para a página de login.
-  // Em uma aplicação real, você invalidaria um token ou sessão.
-  const handleLogout = () => {
-    // Simula o logout e redireciona para a página de login
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     router.push('/login');
+    router.refresh();
   };
 
   return (

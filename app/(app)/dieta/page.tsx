@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { dietService } from '../../../services';
-import type { DailyDietSummary, Meal, WeeklyDietDay } from '../../../types';
-import { Card, Button, Skeleton, Progress, Tabs } from '../../../components';
+import { dietService } from '@/lib/services';
+import type { DailyDietSummary, Meal, WeeklyDietDay } from '@/lib/types';
+import { Card, Button, Skeleton, Progress, Tabs } from '@/components';
 
 // useQuery hook re-implementado localmente para componentes de cliente
 function useQuery<T>(queryFn: () => Promise<T>) {
