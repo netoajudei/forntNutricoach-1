@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "NutriCoach AI",
-  description: "Aplicação de coaching nutricional e treino",
+  title: "ZapNutri",
+  description: "ZapNutri — coaching nutricional e treino via WhatsApp",
 };
 
 export default function RootLayout({

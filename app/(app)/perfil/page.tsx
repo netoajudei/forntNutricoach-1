@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { userService } from '@/lib/services';
 import type { UserProfile, OnboardingData } from '@/lib/types';
 import { Card, Button, Skeleton, Dialog } from '@/components';
+import { useAlunoId } from '@/lib/aluno';
 import { createClient } from '@/lib/supabase/client';
 
 function useQuery<T>(queryFn: () => Promise<T>) {
@@ -70,6 +71,7 @@ const InfoDetail: React.FC<{ label: string; value: any }> = ({ label, value }) =
 export default function PerfilPage() {
     const router = useRouter();
     const supabase = createClient();
+    const { alunoId, loading: alunoLoading } = useAlunoId();
     const handleLogout = async () => {
       await supabase.auth.signOut();
       router.push('/login');
@@ -79,11 +81,13 @@ export default function PerfilPage() {
     const { data: onboardingData, isLoading: onboardingLoading } = useQuery(userService.getOnboardingData);
     const { data: notes, isLoading: notesLoading } = useQuery(userService.getProfileNotes);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isNutriOpen, setIsNutriOpen] = useState(false);
-    const [isPersonalOpen, setIsPersonalOpen] = useState(false);
     const [nutriText, setNutriText] = useState('');
     const [personalText, setPersonalText] = useState('');
     const [saving, setSaving] = useState(false);
+    const [dietDefined, setDietDefined] = useState<boolean | null>(null);
+    const [trainingDefined, setTrainingDefined] = useState<boolean | null>(null);
+    const [goals, setGoals] = useState<any[] | null>(null);
+    const [goalsLoading, setGoalsLoading] = useState<boolean>(true);
 
     useEffect(() => {
       if (notes) {
@@ -94,24 +98,87 @@ export default function PerfilPage() {
 
     const isLoading = userLoading || onboardingLoading || notesLoading;
 
-    const saveNutri = async () => {
-      try {
-        setSaving(true);
-        await userService.updateProfileNotes({ nutricionista: nutriText });
-        setIsNutriOpen(false);
-      } finally {
-        setSaving(false);
-      }
-    };
-    const savePersonal = async () => {
-      try {
-        setSaving(true);
-        await userService.updateProfileNotes({ personal: personalText });
-        setIsPersonalOpen(false);
-      } finally {
-        setSaving(false);
-      }
-    };
+    // Icons (inline SVG)
+    const SuccessIcon = () => (
+      <svg className="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.707a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 10-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+      </svg>
+    );
+    const WarningIcon = () => (
+      <svg className="h-5 w-5 text-yellow-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.72-1.36 3.485 0l6.518 11.592c.75 1.336-.213 2.999-1.742 2.999H3.481c-1.53 0-2.492-1.663-1.743-2.999L8.257 3.1zM11 14a1 1 0 10-2 0 1 1 0 002 0zm-1-2a1 1 0 01-1-1V8a1 1 0 112 0v3a1 1 0 01-1 1z" clipRule="evenodd" />
+      </svg>
+    );
+
+    // Fetch status from instrucoes tables
+    useEffect(() => {
+      const run = async () => {
+        if (!alunoId || alunoLoading) return;
+        try {
+          const { data: nutri, error: e1 } = await supabase
+            .from('instrucoes_nutricionista')
+            .select('instrucoes_texto')
+            .eq('aluno_id', alunoId)
+            .maybeSingle();
+          if (e1) {
+            console.error('Erro status nutricionista:', e1);
+            setDietDefined(false);
+          } else {
+            const v = (nutri?.instrucoes_texto ?? '').trim();
+            setDietDefined(v.length > 0);
+          }
+          const { data: pers, error: e2 } = await supabase
+            .from('instrucoes_personal')
+            .select('instrucoes_texto')
+            .eq('aluno_id', alunoId)
+            .maybeSingle();
+          if (e2) {
+            console.error('Erro status personal:', e2);
+            setTrainingDefined(false);
+          } else {
+            const v2 = (pers?.instrucoes_texto ?? '').trim();
+            setTrainingDefined(v2.length > 0);
+          }
+        } catch (err) {
+          console.error('Erro ao buscar status de instruções:', err);
+          setDietDefined(false);
+          setTrainingDefined(false);
+        }
+      };
+      run();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [alunoId, alunoLoading]);
+
+    // Buscar Metas (goals) do aluno e organizar por colunas
+    useEffect(() => {
+      const run = async () => {
+        if (!alunoId || alunoLoading) return;
+        setGoalsLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('goals')
+            .select('*')
+            .eq('aluno_id', alunoId)
+            .order('data_inicio', { ascending: false });
+          if (error) {
+            console.error('Erro ao buscar metas:', error);
+            setGoals([]);
+          } else {
+            setGoals(data ?? []);
+          }
+        } catch (e) {
+          console.error('Erro inesperado metas:', e);
+          setGoals([]);
+        } finally {
+          setGoalsLoading(false);
+        }
+      };
+      run();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [alunoId, alunoLoading]);
+
+    // Removido: edição via modal do Nutricionista. Agora a edição acontece em uma página dedicada.
+    // Removido: edição via modal do Personal Trainer. Agora a edição acontece em uma página dedicada.
 
     return (
         <div className="p-4 sm:p-6 lg:p-8">
@@ -162,8 +229,6 @@ export default function PerfilPage() {
                                 <ProfileField label="Idade" value={user.age} />
                                 <ProfileField label="Altura" value={`${user.height} cm`} />
                                 <ProfileField label="Peso Inicial" value={`${user.initialWeight} kg`} />
-                                <ProfileField label="Meta de Peso" value={`${user.goalWeight} kg`} />
-                                <ProfileField label="Objetivo Principal" value={user.objective} />
                             </dl>
 
                             <div className="mt-6 text-right">
@@ -172,34 +237,83 @@ export default function PerfilPage() {
                         </Card>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                            <InfoCard title="Metas do Aluno">
+                                {goalsLoading ? (
+                                  <Skeleton className="h-28 w-full" />
+                                ) : (goals && goals.length > 0) ? (
+                                  <div className="space-y-4">
+                                    {goals.map((g, idx) => {
+                                      const fmtDate = (iso?: string) => {
+                                        if (!iso) return '—';
+                                        try {
+                                          const d = new Date(String(iso).slice(0,10) + 'T00:00:00');
+                                          const dd = String(d.getDate()).padStart(2,'0');
+                                          const mm = String(d.getMonth()+1).padStart(2,'0');
+                                          const yyyy = d.getFullYear();
+                                          return `${dd}/${mm}/${yyyy}`;
+                                        } catch {
+                                          return String(iso);
+                                        }
+                                      };
+                                      const rows: Array<{ label: string; value: string }> = [
+                                        { label: 'Nome da Meta', value: g?.nome_meta || '—' },
+                                        { label: 'Métrica Primária', value: g?.metrica_primaria || '—' },
+                                        { label: 'Valor Inicial', value: g?.valor_inicial != null ? `${g.valor_inicial} ${g?.unidade || ''}`.trim() : '—' },
+                                        { label: 'Valor Meta', value: g?.valor_meta != null ? `${g.valor_meta} ${g?.unidade || ''}`.trim() : '—' },
+                                        { label: 'Unidade', value: g?.unidade || '—' },
+                                        { label: 'Status', value: g?.status || '—' },
+                                        { label: 'Início', value: fmtDate(g?.data_inicio) },
+                                        { label: 'Motivação', value: g?.motivacao_principal || '—' },
+                                        { label: 'Cíclica', value: g?.is_cyclical ? 'Sim' : 'Não' },
+                                      ];
+                                      return (
+                                        <div key={g.id ?? idx} className="rounded-xl border border-gray-100 p-4">
+                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
+                                            {rows.map((r, i) => (
+                                              <div key={i} className="flex justify-between text-sm py-1">
+                                                <span className="text-gray-500">{r.label}</span>
+                                                <span className="text-green-900 font-medium text-right">{r.value}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-gray-600">Nenhuma meta cadastrada.</p>
+                                )}
+                            </InfoCard>
                             <InfoCard title="Anotações do Nutricionista">
-                                <div className="flex justify-between items-start">
-                                  <p className="text-gray-600 text-sm whitespace-pre-wrap">{nutriText || 'Sem anotações.'}</p>
-                                  <button
-                                    type="button"
-                                    onClick={() => setIsNutriOpen(true)}
-                                    className="ml-4 p-2 text-gray-500 hover:text-green-600"
-                                    aria-label="Editar anotações do nutricionista"
+                                <div className="flex justify-between items-center gap-4">
+                                  <div className="flex items-center gap-2">
+                                    {dietDefined ? <SuccessIcon /> : <WarningIcon />}
+                                    <span className={`text-sm font-medium ${dietDefined ? 'text-green-700' : 'text-yellow-700'}`}>
+                                      {dietDefined ? 'Dieta Definida' : 'Dieta Indefinida'}
+                                    </span>
+                                  </div>
+                                  <Button
+                                    onClick={() => router.push('/perfil/instrucoes-nutri')}
+                                    className="shrink-0"
                                   >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-9.9 9.9A2 2 0 015.1 17.9L2 18l.1-3.1a2 2 0 01.586-1.414l9.9-9.9z" />
-                                    </svg>
-                                  </button>
+                                    Nutritionist Instructions
+                                  </Button>
                                 </div>
                             </InfoCard>
                             <InfoCard title="Anotações do Personal Trainer">
-                                <div className="flex justify-between items-start">
-                                  <p className="text-gray-600 text-sm whitespace-pre-wrap">{personalText || 'Sem anotações.'}</p>
-                                  <button
-                                    type="button"
-                                    onClick={() => setIsPersonalOpen(true)}
-                                    className="ml-4 p-2 text-gray-500 hover:text-green-600"
-                                    aria-label="Editar anotações do personal"
+                                <div className="flex justify-between items-center gap-4">
+                                  <div className="flex items-center gap-2">
+                                    {trainingDefined ? <SuccessIcon /> : <WarningIcon />}
+                                    <span className={`text-sm font-medium ${trainingDefined ? 'text-green-700' : 'text-yellow-700'}`}>
+                                      {trainingDefined ? 'Treino Definido' : 'Treino Indefinido'}
+                                    </span>
+                                  </div>
+                                  <Button
+                                    onClick={() => router.push('/perfil/instrucoes-personal')}
+                                    className="shrink-0"
                                   >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                      <path d="M13.586 3.586a2 2 0 112.828 2.828l-9.9 9.9A2 2 0 015.1 17.9L2 18l.1-3.1a2 2 0 01.586-1.414l9.9-9.9z" />
-                                    </svg>
-                                  </button>
+                                    Personal Trainer Instructions
+                                  </Button>
                                 </div>
                             </InfoCard>
                              <InfoCard title="Saúde e Lesões">
@@ -227,11 +341,6 @@ export default function PerfilPage() {
                                     {Object.entries(onboardingData.preferenciasTreino).map(([key, value]) => <InfoDetail key={key} label={key} value={value} />)}
                                 </dl>
                             </InfoCard>
-                             <InfoCard title="Medidas Iniciais">
-                                <dl>
-                                    {Object.entries(onboardingData.medidasCorporais).map(([key, value]) => <InfoDetail key={key} label={key} value={value} />)}
-                                </dl>
-                            </InfoCard>
                         </div>
                     </>
                 ) : null}
@@ -250,45 +359,9 @@ export default function PerfilPage() {
                     <p>Esta é uma funcionalidade de demonstração. Em uma aplicação real, aqui estaria um formulário para editar os dados do perfil.</p>
                 </Dialog>
 
-                <Dialog
-                  isOpen={isNutriOpen}
-                  onClose={() => setIsNutriOpen(false)}
-                  title="Anotações do Nutricionista"
-                  footer={
-                    <>
-                      <Button variant="secondary" onClick={() => setIsNutriOpen(false)}>Cancelar</Button>
-                      <Button onClick={saveNutri} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
-                    </>
-                  }
-                >
-                  <textarea
-                    className="w-full mt-1 px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                    rows={10}
-                    placeholder="Escreva observações, preferências e instruções..."
-                    value={nutriText}
-                    onChange={(e) => setNutriText(e.target.value)}
-                  />
-                </Dialog>
+                {null /* Modal do Nutricionista removido em favor da nova página dedicada */}
 
-                <Dialog
-                  isOpen={isPersonalOpen}
-                  onClose={() => setIsPersonalOpen(false)}
-                  title="Anotações do Personal Trainer"
-                  footer={
-                    <>
-                      <Button variant="secondary" onClick={() => setIsPersonalOpen(false)}>Cancelar</Button>
-                      <Button onClick={savePersonal} disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</Button>
-                    </>
-                  }
-                >
-                  <textarea
-                    className="w-full mt-1 px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                    rows={10}
-                    placeholder="Escreva observações, preferências e instruções..."
-                    value={personalText}
-                    onChange={(e) => setPersonalText(e.target.value)}
-                  />
-                </Dialog>
+                {null /* Modal do Personal removido em favor da nova página dedicada */}
             </div>
         </div>
     );

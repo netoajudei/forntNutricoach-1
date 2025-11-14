@@ -23,7 +23,7 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
             <div className="h-20 flex items-center justify-center px-4 border-b border-gray-200">
                 <h1 className="text-3xl font-extrabold">
                     <span className="bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-blue-500">
-                        NutriCoach
+                        ZapNutri
                     </span>
                 </h1>
             </div>

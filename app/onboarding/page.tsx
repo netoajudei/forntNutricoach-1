@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Button } from '@/components';
 import type { OnboardingData, MedidasCorporais } from '@/lib/types';
 import { salvarOnboarding } from '@/lib/services/onboarding.service';
+import { createClient } from '@/lib/supabase/client';
 
 const TOTAL_STEPS = 9;
 
@@ -128,6 +129,13 @@ const RotinaStep: React.FC<{ data: OnboardingData['rotina']; updateData: (field:
 );
 
 const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferenciasAlimentares']; updateData: (field: keyof OnboardingData['preferenciasAlimentares'], value: any) => void }> = ({ data, updateData }) => {
+    const supabase = createClient();
+    const [isLoading, setIsLoading] = useState(true);
+    const [categories, setCategories] = useState<Array<{ categoria: string; items: Array<{ id: string; nome: string }> }>>([]);
+    const [likes, setLikes] = useState<string[]>([]);
+    const [dislikes, setDislikes] = useState<string[]>([]);
+    const [activeCatIdx, setActiveCatIdx] = useState(0);
+
     // Converter array de restrições para string para exibição no input
     const restricoesTexto = Array.isArray(data.restricoes) ? data.restricoes.join(', ') : '';
     
@@ -137,38 +145,198 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
         updateData('restricoes', array);
     };
 
+    // Inicializar likes/dislikes a partir dos textareas existentes
+    useEffect(() => {
+        const toArray = (txt: string): string[] =>
+          (txt || '')
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean);
+        setLikes(toArray(data.alimentosFavoritos));
+        setDislikes(toArray(data.alimentosNaoGosta));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Buscar categorias e itens do Supabase via RPC get_food_items_template
+    useEffect(() => {
+        const run = async () => {
+            try {
+                const { data, error } = await supabase.rpc('get_food_items_template');
+                if (error) {
+                    console.error('Erro ao carregar categorias de alimentos (RPC):', error.message);
+                    setCategories([]);
+                } else {
+                    // Esperado: [{ categoria: string, items: [{ id, nome }, ...] }, ...]
+                    const normalized: Array<{ categoria: string; items: Array<{ id: string; nome: string }> }> =
+                      Array.isArray(data)
+                        ? data.map((r: any) => ({
+                            categoria: String(r.categoria ?? 'Categoria'),
+                            items: Array.isArray(r.items)
+                              ? r.items.map((it: any) => ({ id: String(it.id), nome: String(it.nome) }))
+                              : [],
+                          }))
+                        : [];
+                    setCategories(normalized);
+                }
+            } catch (e: any) {
+                console.error('Erro inesperado ao carregar categorias:', e?.message || e);
+                setCategories([]);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        run();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Sincronizar textareas quando likes/dislikes mudarem (simula digitação)
+    useEffect(() => {
+        updateData('alimentosFavoritos', likes.join(', '));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [likes]);
+    useEffect(() => {
+        updateData('alimentosNaoGosta', dislikes.join(', '));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dislikes]);
+
+    const toggleLike = (item: string) => {
+        item = item.trim();
+        if (!item) return;
+        // Se já está em dislikes, remove
+        if (dislikes.includes(item)) {
+            setDislikes(dislikes.filter(i => i !== item));
+        }
+        // Toggle no likes
+        setLikes(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
+    };
+    const toggleDislike = (item: string) => {
+        item = item.trim();
+        if (!item) return;
+        if (likes.includes(item)) {
+            setLikes(likes.filter(i => i !== item));
+        }
+        setDislikes(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
+    };
+
+    // ItemRow com áreas clicáveis nas extremidades (esquerda = like, direita = dislike)
+    const ItemRow: React.FC<{ name: string }> = ({ name }) => {
+        const liked = likes.includes(name);
+        const disliked = dislikes.includes(name);
+        const neutral = !liked && !disliked;
+        return (
+            <div
+                className={`inline-flex items-center rounded-full border overflow-hidden select-none
+                    ${liked ? 'border-green-300 bg-green-50' : disliked ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'}`}
+            >
+                {/* Botão Like (esquerda) */}
+                <button
+                    type="button"
+                    onClick={() => toggleLike(name)}
+                    className={`px-2 py-1 flex items-center justify-center transition-colors`}
+                    aria-label="Gostar"
+                    title="Gostar (+)"
+                >
+                    <span className={`font-bold ${disliked ? 'text-gray-300' : 'text-green-700'} text-base leading-none`}>+</span>
+                </button>
+                {/* Nome central com clique esquerda/direita */}
+                <button
+                    type="button"
+                    onClick={(e) => {
+                        const rect = (e.currentTarget as HTMLButtonElement).getBoundingClientRect();
+                        const clickX = e.clientX - rect.left;
+                        if (clickX < rect.width / 2) toggleLike(name);
+                        else toggleDislike(name);
+                    }}
+                    className={`px-3 py-1 text-left truncate text-xs ${neutral ? 'text-gray-800' : liked ? 'text-green-900' : 'text-red-900'}`}
+                    title={name}
+                >
+                    {name}
+                </button>
+                {/* Botão Dislike (direita) */}
+                <button
+                    type="button"
+                    onClick={() => toggleDislike(name)}
+                    className={`px-2 py-1 flex items-center justify-center transition-colors`}
+                    aria-label="Não gostar"
+                    title="Não gostar (−)"
+                >
+                    <span className={`font-bold ${liked ? 'text-gray-300' : 'text-red-700'} text-base leading-none`}>−</span>
+                </button>
+            </div>
+        );
+    };
+
     return (
     <FormSection title="Preferências Alimentares" subtitle="Vamos montar uma dieta que você goste.">
+            {/* Inputs no topo: disposição e orçamento */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormSelect label="Disposição para cozinhar" value={data.disposicaoCozinhar} onChange={e => updateData('disposicaoCozinhar', e.target.value)}>
+                    <option value="">Selecione...</option>
+                    <option value="baixa">Baixa</option>
+                    <option value="media">Média</option>
+                    <option value="alta">Alta</option>
+                </FormSelect>
+                <FormSelect label="Orçamento alimentar" value={data.orcamento} onChange={e => updateData('orcamento', e.target.value)}>
+                    <option value="">Selecione...</option>
+                    <option value="economico">Econômico</option>
+                    <option value="moderado">Moderado</option>
+                    <option value="flexivel">Flexível</option>
+                </FormSelect>
+            </div>
+            {/* Textareas logo abaixo */}
             <FormTextarea 
                 label="Restrições alimentares (digite separadas por vírgula, ex: Vegetariano, Sem Lactose, Alergia a amendoim)" 
                 value={restricoesTexto} 
                 onChange={e => handleRestricoesChange(e.target.value)}
                 placeholder="Ex: Vegetariano, Sem Lactose, Alergia a amendoim"
+                rows={2}
             />
-            <FormTextarea 
-                label="Alimentos que não gosta (digite separados por vírgula)" 
-                value={data.alimentosNaoGosta} 
-                onChange={e => updateData('alimentosNaoGosta', e.target.value)}
-                placeholder="Ex: Jiló, Fígado, Couve"
-            />
-            <FormTextarea 
-                label="Alimentos favoritos (digite separados por vírgula)" 
-                value={data.alimentosFavoritos} 
-                onChange={e => updateData('alimentosFavoritos', e.target.value)}
-                placeholder="Ex: Frango, Batata doce, Brócolis"
-            />
-        <FormSelect label="Disposição para cozinhar" value={data.disposicaoCozinhar} onChange={e => updateData('disposicaoCozinhar', e.target.value)}>
-            <option value="">Selecione...</option>
-            <option value="baixa">Baixa</option>
-            <option value="media">Média</option>
-            <option value="alta">Alta</option>
-        </FormSelect>
-        <FormSelect label="Orçamento alimentar" value={data.orcamento} onChange={e => updateData('orcamento', e.target.value)}>
-            <option value="">Selecione...</option>
-            <option value="economico">Econômico</option>
-            <option value="moderado">Moderado</option>
-            <option value="flexivel">Flexível</option>
-        </FormSelect>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormTextarea 
+                    label="Alimentos que não gosto (vírgulas)" 
+                    value={data.alimentosNaoGosta} 
+                    onChange={e => updateData('alimentosNaoGosta', e.target.value)}
+                    placeholder="Ex: Jiló, Fígado, Couve"
+                    rows={2}
+                />
+                <FormTextarea 
+                    label="Alimentos favoritos (vírgulas)" 
+                    value={data.alimentosFavoritos} 
+                    onChange={e => updateData('alimentosFavoritos', e.target.value)}
+                    placeholder="Ex: Frango, Batata doce, Brócolis"
+                    rows={2}
+                />
+            </div>
+            {/* Tabs por categoria (grande), sem rolagem; container expande para caber todos os itens */}
+            <div className="mt-6">
+                {isLoading ? (
+                    <div className="text-sm text-gray-500">Carregando categorias...</div>
+                ) : (
+                    <>
+                        <div className="flex flex-wrap gap-2 pb-2">
+                            {categories.map((cat, idx) => (
+                                <button
+                                    key={cat.categoria}
+                                    type="button"
+                                    onClick={() => setActiveCatIdx(idx)}
+                                    className={`px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap ${
+                                        activeCatIdx === idx ? 'bg-green-500 text-white shadow' : 'bg-white border border-gray-200 hover:bg-green-50'
+                                    }`}
+                                >
+                                    {cat.categoria}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="mt-3 rounded-2xl border border-gray-100 bg-white p-3">
+                            <div className="flex flex-wrap gap-2">
+                                {categories[activeCatIdx]?.items.slice(0, 200).map(item => (
+                                    <ItemRow key={item.id} name={item.nome} />
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                )}
+            </div>
     </FormSection>
 );
 };
@@ -178,6 +346,7 @@ const PreferenciasTreinoStep: React.FC<{ data: OnboardingData['preferenciasTrein
         <FormSelect label="Local de treino" value={data.local} onChange={e => updateData('local', e.target.value)}>
             <option value="">Selecione...</option>
             <option value="academia">Academia</option>
+            <option value="crossfit">Crossfit</option>
             <option value="casa">Casa</option>
             <option value="parque">Parque</option>
             <option value="misto">Misto</option>

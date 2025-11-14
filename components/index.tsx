@@ -41,12 +41,19 @@ export const Skeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
 interface ProgressProps {
   value: number;
   className?: string;
+  barClassName?: string;
 }
-export const Progress: React.FC<ProgressProps> = ({ value, className = '' }) => (
-  <div className={`relative h-2.5 w-full overflow-hidden rounded-full bg-gray-200 ${className}`}>
-    <div className="h-full w-full flex-1 bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-500 ease-out" style={{ transform: `translateX(-${100 - (value || 0)}%)` }} />
-  </div>
-);
+export const Progress: React.FC<ProgressProps> = ({ value, className = '', barClassName }) => {
+  const barClasses = barClassName || "bg-gradient-to-r from-green-400 to-blue-500";
+  return (
+    <div className={`relative h-2.5 w-full overflow-hidden rounded-full bg-gray-200 ${className}`}>
+      <div
+        className={`h-full w-full flex-1 ${barClasses} transition-all duration-500 ease-out`}
+        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+      />
+    </div>
+  );
+};
 
 interface TabsProps {
   tabs: string[];

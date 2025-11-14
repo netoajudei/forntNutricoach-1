@@ -16,9 +16,9 @@ const AuthLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 export default function RegisterPage() {
     const router = useRouter();
-    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const supabase = createClient();
@@ -28,14 +28,18 @@ export default function RegisterPage() {
         setLoading(true);
         setError(null);
 
+        if (password !== confirmPassword) {
+            setError('As senhas não coincidem.');
+            setLoading(false);
+            return;
+        }
+
         try {
             const { data, error: signUpError } = await supabase.auth.signUp({
                 email,
                 password,
                 options: {
-                    data: {
-                        name: name,
-                    },
+                    data: {},
                 },
             });
 
@@ -60,7 +64,6 @@ export default function RegisterPage() {
                     const { error } = await supabase
                         .from('alunos')
                         .update({
-                            nome_completo: name,
                             email: email,
                         })
                         .eq('auth_user_id', data.user.id);
@@ -71,7 +74,6 @@ export default function RegisterPage() {
                         .from('alunos')
                         .insert({
                             auth_user_id: data.user.id,
-                            nome_completo: name,
                             email: email,
                             whatsapp: '', // Campo obrigatório, será atualizado no onboarding se necessário
                         });
@@ -112,17 +114,6 @@ export default function RegisterPage() {
 
             <form onSubmit={handleRegister} className="space-y-4">
                 <div>
-                    <label className="text-sm font-medium">Nome Completo</label>
-                    <input 
-                        type="text" 
-                        placeholder="Seu Nome" 
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        className="w-full mt-1 px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all" 
-                    />
-                </div>
-                <div>
                     <label className="text-sm font-medium">Email</label>
                     <input 
                         type="email" 
@@ -145,6 +136,18 @@ export default function RegisterPage() {
                         className="w-full mt-1 px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all" 
                     />
                     <p className="text-xs text-gray-500 mt-1">Mínimo de 6 caracteres</p>
+                </div>
+                <div>
+                    <label className="text-sm font-medium">Confirmar Senha</label>
+                    <input 
+                        type="password" 
+                        placeholder="Repita a senha" 
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        minLength={6}
+                        className="w-full mt-1 px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all" 
+                    />
                 </div>
                 <Button 
                     type="submit" 
