@@ -1,0 +1,5 @@
+{
+  "name": "ZapNutri",
+  "description": "A web dashboard for ZapNutri clients to consult their diet plans, workout programs, and visualize their progress with historical data and charts. This is a read-only prototype using mocked data.",
+  "requestFramePermissions": []
+}
