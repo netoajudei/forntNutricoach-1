@@ -4,6 +4,7 @@ export type ImpersonationState = {
   active: boolean;
   professional_user_id: string;
   student_aluno_id: string;
+  student_linked_id?: string; // backward compat
   role: "nutricionista" | "personal";
   started_at: string;
 };
