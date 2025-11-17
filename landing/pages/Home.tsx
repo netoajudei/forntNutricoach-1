@@ -45,7 +45,7 @@ export default function Home() {
             </Link>
             <div className="flex items-center gap-3">
               <Link href="/login">
-                <Button variant="outline" size="sm" data-testid="button-login">
+                <Button variant="outline" data-testid="button-login" className="px-3 py-1.5 text-sm">
                   Entrar
                 </Button>
               </Link>

@@ -256,7 +256,7 @@ export default function WorkoutExercisesPage() {
                         <p className="text-sm font-semibold text-green-900">{t.nome_exercicio}</p>
                         <p className="text-xs text-gray-500">{t.grupo_muscular}</p>
                       </div>
-                      <Button size="sm" variant="secondary" onClick={() => openAddExercise(t)}>
+                      <Button variant="secondary" onClick={() => openAddExercise(t)} className="px-3 py-1.5 text-sm">
                         + Adicionar
                       </Button>
                     </div>
