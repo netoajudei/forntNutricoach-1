@@ -10,14 +10,14 @@ import { createClient } from '@/lib/supabase/client';
 const TOTAL_STEPS = 9;
 
 const initialOnboardingData: OnboardingData = {
-  dadosBasicos: { nomeCompleto: '', dataNascimento: '', sexo: '' },
-  saude: { condicoesMedicas: '', medicacoes: '', alergias: '' },
-  lesoes: { lesoesLimitacoes: '' },
-  rotina: { profissao: '', horarioAcordar: '', horarioDormir: '' },
-  preferenciasAlimentares: { restricoes: [], alimentosNaoGosta: '', alimentosDisponiveis: '', disposicaoCozinhar: '', orcamento: '' },
-  preferenciasTreino: { local: '', equipamentos: [], experiencia: '', diasPreferenciais: [], horariosPreferenciais: [] },
-  objetivo: { meta: '', prazo: '', motivacao: '' },
-  medidasCorporais: { data: '', peso: '', altura: '', pescoco: '', peito: '', cintura: '', quadril: '', bracoDireito: '', bracoEsquerdo: '', coxaDireita: '', coxaEsquerda: '', panturrilhaDireita: '', panturrilhaEsquerda: '', gordura: '', notas: '' },
+    dadosBasicos: { nomeCompleto: '', dataNascimento: '', sexo: '' },
+    saude: { condicoesMedicas: '', medicacoes: '', alergias: '' },
+    lesoes: { lesoesLimitacoes: '' },
+    rotina: { profissao: '', horarioAcordar: '', horarioDormir: '' },
+    preferenciasAlimentares: { restricoes: [], alimentosNaoGosta: '', alimentosDisponiveis: '', disposicaoCozinhar: '', orcamento: '' },
+    preferenciasTreino: { local: '', equipamentos: [], experiencia: '', diasPreferenciais: [], horariosPreferenciais: [] },
+    objetivo: { meta: '', prazo: '', motivacao: '' },
+    medidasCorporais: { data: '', peso: '', altura: '', pescoco: '', peito: '', cintura: '', quadril: '', bracoDireito: '', bracoEsquerdo: '', coxaDireita: '', coxaEsquerda: '', panturrilhaDireita: '', panturrilhaEsquerda: '', gordura: '', notas: '' },
 };
 
 const ProgressBar: React.FC<{ currentStep: number }> = ({ currentStep }) => (
@@ -138,7 +138,7 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
 
     // Converter array de restrições para string para exibição no input
     const restricoesTexto = Array.isArray(data.restricoes) ? data.restricoes.join(', ') : '';
-    
+
     const handleRestricoesChange = (texto: string) => {
         // Converter string para array (separar por vírgula)
         const array = texto.split(',').map(item => item.trim()).filter(item => item.length > 0);
@@ -148,13 +148,13 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
     // Inicializar likes/dislikes a partir dos textareas existentes
     useEffect(() => {
         const toArray = (txt: string): string[] =>
-          (txt || '')
-            .split(',')
-            .map(s => s.trim())
-            .filter(Boolean);
+            (txt || '')
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
         setLikes(toArray(data.alimentosDisponiveis));
         setDislikes(toArray(data.alimentosNaoGosta));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Buscar categorias e itens do Supabase via RPC get_food_items_template
@@ -168,14 +168,14 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
                 } else {
                     // Esperado: [{ categoria: string, items: [{ id, nome }, ...] }, ...]
                     const normalized: Array<{ categoria: string; items: Array<{ id: string; nome: string }> }> =
-                      Array.isArray(data)
-                        ? data.map((r: any) => ({
-                            categoria: String(r.categoria ?? 'Categoria'),
-                            items: Array.isArray(r.items)
-                              ? r.items.map((it: any) => ({ id: String(it.id), nome: String(it.nome) }))
-                              : [],
-                          }))
-                        : [];
+                        Array.isArray(data)
+                            ? data.map((r: any) => ({
+                                categoria: String(r.categoria ?? 'Categoria'),
+                                items: Array.isArray(r.items)
+                                    ? r.items.map((it: any) => ({ id: String(it.id), nome: String(it.nome) }))
+                                    : [],
+                            }))
+                            : [];
                     setCategories(normalized);
                 }
             } catch (e: any) {
@@ -267,7 +267,7 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
     };
 
     return (
-    <FormSection title="Preferências Alimentares" subtitle="Vamos montar uma dieta que você goste.">
+        <FormSection title="Preferências Alimentares" subtitle="Vamos montar uma dieta que você goste.">
             {/* Inputs no topo: disposição e orçamento */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormSelect label="Disposição para cozinhar" value={data.disposicaoCozinhar} onChange={e => updateData('disposicaoCozinhar', e.target.value)}>
@@ -284,25 +284,25 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
                 </FormSelect>
             </div>
             {/* Textareas logo abaixo */}
-            <FormTextarea 
-                label="Restrições alimentares (digite separadas por vírgula, ex: Vegetariano, Sem Lactose, Alergia a amendoim)" 
-                value={restricoesTexto} 
+            <FormTextarea
+                label="Restrições alimentares (digite separadas por vírgula, ex: Vegetariano, Sem Lactose, Alergia a amendoim)"
+                value={restricoesTexto}
                 onChange={e => handleRestricoesChange(e.target.value)}
                 placeholder="Ex: Vegetariano, Sem Lactose, Alergia a amendoim"
                 rows={2}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormTextarea 
-                    label="Alimentos que não gosto (vírgulas)" 
-                    value={data.alimentosNaoGosta} 
+                <FormTextarea
+                    label="Alimentos que não gosto (vírgulas)"
+                    value={data.alimentosNaoGosta}
                     onChange={e => updateData('alimentosNaoGosta', e.target.value)}
                     placeholder="Ex: Jiló, Fígado, Couve"
                     rows={2}
                 />
-                <FormTextarea 
-                    label="Alimentos disponíveis (vírgulas)" 
-                    value={data.alimentosFavoritos} 
-                    onChange={e => updateData('alimentosFavoritos', e.target.value)}
+                <FormTextarea
+                    label="Alimentos disponíveis (vírgulas)"
+                    value={data.alimentosDisponiveis}
+                    onChange={e => updateData('alimentosDisponiveis', e.target.value)}
                     placeholder="Ex: Frango, Ovos, Arroz"
                     rows={2}
                 />
@@ -319,9 +319,8 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
                                     key={cat.categoria}
                                     type="button"
                                     onClick={() => setActiveCatIdx(idx)}
-                                    className={`px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap ${
-                                        activeCatIdx === idx ? 'bg-green-500 text-white shadow' : 'bg-white border border-gray-200 hover:bg-green-50'
-                                    }`}
+                                    className={`px-3 py-2 rounded-xl text-sm font-semibold whitespace-nowrap ${activeCatIdx === idx ? 'bg-green-500 text-white shadow' : 'bg-white border border-gray-200 hover:bg-green-50'
+                                        }`}
                                 >
                                     {cat.categoria}
                                 </button>
@@ -337,8 +336,8 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
                     </>
                 )}
             </div>
-    </FormSection>
-);
+        </FormSection>
+    );
 };
 
 const PreferenciasTreinoStep: React.FC<{ data: OnboardingData['preferenciasTreino']; updateData: (field: keyof OnboardingData['preferenciasTreino'], value: any) => void }> = ({ data, updateData }) => (
@@ -368,26 +367,26 @@ const PreferenciasTreinoStep: React.FC<{ data: OnboardingData['preferenciasTrein
 
 const ObjetivoStep: React.FC<{ data: OnboardingData['objetivo']; updateData: (field: keyof OnboardingData['objetivo'], value: string) => void }> = ({ data, updateData }) => (
     <FormSection title="Metas de Medidas Corporais" subtitle="Defina sua meta focada em medidas corporais.">
-        <FormInput 
-            label="Nome da Meta" 
-            type="text" 
-            value={data.meta} 
+        <FormInput
+            label="Nome da Meta"
+            type="text"
+            value={data.meta}
             onChange={e => updateData('meta', e.target.value)}
             placeholder="Ex: Perder 10kg, Ganhar massa muscular"
         />
-        <FormInput 
-            label="Valor Inicial (kg)" 
-            type="number" 
-            step="0.1" 
-            value={data.prazo} 
+        <FormInput
+            label="Valor Inicial (kg)"
+            type="number"
+            step="0.1"
+            value={data.prazo}
             onChange={e => updateData('prazo', e.target.value)}
             placeholder="Ex: 85.5"
         />
-        <FormInput 
-            label="Valor Final/Meta (kg)" 
-            type="number" 
-            step="0.1" 
-            value={data.motivacao} 
+        <FormInput
+            label="Valor Final/Meta (kg)"
+            type="number"
+            step="0.1"
+            value={data.motivacao}
             onChange={e => updateData('motivacao', e.target.value)}
             placeholder="Ex: 75.0"
         />
@@ -417,27 +416,27 @@ const MedidasCorporaisStep: React.FC<{ data: MedidasCorporais; updateData: (fiel
 );
 
 const ReviewStep: React.FC<{ data: OnboardingData }> = ({ data }) => {
-  const renderList = (items: string[]) => items.length > 0 ? items.join(', ') : 'N/A';
-  
-  return (
-    <FormSection title="Revisão das Informações" subtitle="Confira se todos os dados estão corretos antes de finalizar.">
-      <div className="space-y-4 text-sm">
-        {Object.entries(data).map(([sectionKey, sectionValue]) => (
-          <div key={sectionKey} className="p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-semibold capitalize mb-2 text-green-800">{sectionKey.replace(/([A-Z])/g, ' $1').trim()}</h4>
-            <div className="space-y-1">
-              {Object.entries(sectionValue).map(([key, value]) => (
-                <div key={key} className="flex justify-between">
-                  <span className="text-gray-500">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                  <span className="font-medium text-right text-green-900">{Array.isArray(value) ? renderList(value as string[]) : ((value as any) || 'N/A')}</span>
-                </div>
-              ))}
+    const renderList = (items: string[]) => items.length > 0 ? items.join(', ') : 'N/A';
+
+    return (
+        <FormSection title="Revisão das Informações" subtitle="Confira se todos os dados estão corretos antes de finalizar.">
+            <div className="space-y-4 text-sm">
+                {Object.entries(data).map(([sectionKey, sectionValue]) => (
+                    <div key={sectionKey} className="p-4 bg-gray-50 rounded-lg">
+                        <h4 className="font-semibold capitalize mb-2 text-green-800">{sectionKey.replace(/([A-Z])/g, ' $1').trim()}</h4>
+                        <div className="space-y-1">
+                            {Object.entries(sectionValue).map(([key, value]) => (
+                                <div key={key} className="flex justify-between">
+                                    <span className="text-gray-500">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
+                                    <span className="font-medium text-right text-green-900">{Array.isArray(value) ? renderList(value as string[]) : ((value as any) || 'N/A')}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
             </div>
-          </div>
-        ))}
-      </div>
-    </FormSection>
-  );
+        </FormSection>
+    );
 };
 
 const GerandoPlanoFinal: React.FC = () => (
@@ -480,8 +479,8 @@ export default function OnboardingPage() {
                 }
             } catch (error) {
                 console.error('Erro ao salvar onboarding:', error);
-                const errorMessage = error instanceof Error 
-                    ? error.message 
+                const errorMessage = error instanceof Error
+                    ? error.message
                     : 'Erro desconhecido ao finalizar cadastro';
                 alert(`Erro: ${errorMessage}`);
                 setIsFinalizing(false);
