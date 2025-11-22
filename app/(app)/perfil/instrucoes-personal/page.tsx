@@ -188,10 +188,10 @@ export default function PersonalTrainerInstructionsPage() {
 
         {/* Section 1: AI Instructions (read-only) - somente para profissionais */}
         {isPro && (
-          <section className="rounded-xl border border-border bg-card p-4 md:p-6 space-y-4">
+          <section className="rounded-xl border border-gray-300 bg-gray-100 p-4 md:p-6 space-y-4">
             <h2 className="text-lg md:text-xl font-semibold">Instruções da IA</h2>
             <textarea
-              className="w-full min-h-48 rounded-lg border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="w-full min-h-48 rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none focus:ring-2 focus:ring-blue-500"
               value={isInitialLoading ? loadingPlaceholder : aiInstructionsText}
               readOnly
               onClick={() => setShowAIPopup(true)}
@@ -201,7 +201,7 @@ export default function PersonalTrainerInstructionsPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmFetch(true)}
-                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-primary/10 disabled:opacity-60"
                 disabled={isFetchingAI}
               >
                 {isFetchingAI ? (
@@ -221,7 +221,7 @@ export default function PersonalTrainerInstructionsPage() {
                   // Abre o popup editável para facilitar a edição
                   setShowEditablePopup(true);
                 }}
-                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-primary/10"
               >
                 Copiar conteúdo da IA
               </button>
@@ -230,10 +230,10 @@ export default function PersonalTrainerInstructionsPage() {
         )}
 
         {/* Section 2: Personal Trainer's Custom Instructions (editable) */}
-        <section className="rounded-xl border border-border bg-card p-4 md:p-6 space-y-4">
+        <section className="rounded-xl border border-gray-300 bg-gray-100 p-4 md:p-6 space-y-4">
           <h2 className="text-lg md:text-xl font-semibold">Instruções Personalizadas do Personal</h2>
           <textarea
-            className="w-full min-h-64 rounded-lg border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="w-full min-h-64 rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none focus:ring-2 focus:ring-blue-500"
             value={personalInstructionsText}
             onChange={(e) => setPersonalInstructionsText(e.target.value)}
             onClick={() => setShowEditablePopup(true)}
@@ -247,7 +247,7 @@ export default function PersonalTrainerInstructionsPage() {
                 <button
                   type="button"
                   onClick={handleSavePersonalInstructions}
-                  className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-muted"
+                  className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-primary/10"
                 >
                   Salvar instruções do personal
                 </button>
@@ -266,7 +266,7 @@ export default function PersonalTrainerInstructionsPage() {
             <button
               type="button"
               onClick={() => router.push("/dashboard/workout-programs")}
-              className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-muted"
+              className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-primary/10"
               title="Criar exercícios manualmente"
             >
               Criar exercício manualmente
@@ -285,13 +285,13 @@ export default function PersonalTrainerInstructionsPage() {
               <button
                 type="button"
                 onClick={() => setShowAIPopup(false)}
-                className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
+                className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm hover:bg-primary/10"
               >
                 Fechar
               </button>
             </div>
             <textarea
-              className="flex-1 w-full rounded-lg border border-input bg-background p-3 text-sm outline-none"
+              className="flex-1 w-full rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none"
               value={aiInstructionsText}
               readOnly
             />
@@ -310,14 +310,14 @@ export default function PersonalTrainerInstructionsPage() {
                 <button
                   type="button"
                   onClick={() => setShowEditablePopup(false)}
-                  className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
+                  className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm hover:bg-primary/10"
                 >
                   Fechar
                 </button>
               </div>
             </div>
             <textarea
-              className="flex-1 w-full rounded-lg border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="flex-1 w-full rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none focus:ring-2 focus:ring-blue-500"
               value={personalInstructionsText}
               onChange={(e) => setPersonalInstructionsText(e.target.value)}
             />
@@ -338,7 +338,7 @@ export default function PersonalTrainerInstructionsPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmFetch(false)}
-                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm hover:bg-muted"
+                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm hover:bg-primary/10"
               >
                 Não
               </button>
@@ -382,7 +382,7 @@ export default function PersonalTrainerInstructionsPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm hover:bg-muted"
+                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm hover:bg-primary/10"
               >
                 Cancelar
               </button>
@@ -401,6 +401,3 @@ export default function PersonalTrainerInstructionsPage() {
     </div>
   );
 }
-
-
-

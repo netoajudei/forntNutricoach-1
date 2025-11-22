@@ -25,62 +25,78 @@
 }
 
 /* Landing page design tokens and utilities */
-/* LIGHT MODE */
+/* LIGHT MODE - VIVID & SOFT */
 :root {
   --button-outline: rgba(0,0,0, .10);
   --badge-outline: rgba(0,0,0, .05);
   --opaque-button-border-intensity: -8;
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
-  --background: 0 0% 100%;
-  /* Verde bem escuro para tipografia padrão */
-  --foreground: 148 78% 24%;
-  --border: 0 0% 91%;
-  --card: 0 0% 98%;
-  /* Texto em cards também em verde escuro */
-  --card-foreground: 148 78% 24%;
-  --card-border: 0 0% 95%;
-  --sidebar: 0 0% 96%;
-  --sidebar-foreground: 0 0% 10%;
-  --sidebar-border: 0 0% 93%;
-  --sidebar-primary: 168 76% 42%;
-  --sidebar-primary-foreground: 168 76% 98%;
-  --sidebar-accent: 0 0% 92%;
-  --sidebar-accent-foreground: 0 0% 10%;
-  --sidebar-ring: 168 76% 42%;
-  --popover: 0 0% 94%;
-  --popover-foreground: 0 0% 10%;
-  --popover-border: 0 0% 90%;
-  --primary: 168 76% 42%;
-  --primary-foreground: 168 76% 98%;
-  --secondary: 195 78% 28%;
-  --secondary-foreground: 195 78% 98%;
-  --muted: 0 0% 92%;
-  /* Também usar verde escuro para textos 'muted' */
-  --muted-foreground: 148 78% 24%;
-  --accent: 28 92% 55%;
-  --accent-foreground: 28 92% 98%;
-  --destructive: 0 84% 45%;
-  --destructive-foreground: 0 84% 98%;
-  --input: 0 0% 75%;
-  --ring: 168 76% 42%;
-  --chart-1: 168 76% 42%;
-  --chart-2: 195 78% 28%;
-  --chart-3: 28 92% 55%;
-  --chart-4: 168 60% 50%;
-  --chart-5: 195 65% 35%;
+  
+  /* Fundo muito claro, quase branco, levemente quente para 'suavidade' */
+  --background: 60 20% 99%; 
+  /* Texto cinza escuro suave, não preto absoluto */
+  --foreground: 220 15% 25%;
+  
+  --border: 220 15% 92%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 15% 25%;
+  --card-border: 220 15% 94%;
+  
+  --sidebar: 0 0% 98%;
+  --sidebar-foreground: 220 15% 25%;
+  --sidebar-border: 220 15% 92%;
+  --sidebar-primary: 162 70% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 15% 96%;
+  --sidebar-accent-foreground: 220 15% 25%;
+  --sidebar-ring: 162 70% 45%;
+  
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 15% 25%;
+  --popover-border: 220 15% 92%;
+  
+  /* Primary: Vivid Mint/Spring Green - Energético mas suave */
+  --primary: 162 85% 40%;
+  --primary-foreground: 0 0% 100%;
+  
+  /* Secondary: Soft Coral/Peach - Para contraste amigável */
+  --secondary: 14 90% 65%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --muted: 220 15% 96%;
+  --muted-foreground: 220 10% 55%;
+  
+  --accent: 190 80% 50%; /* Light Blue for fresh accents */
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  
+  --input: 220 15% 90%;
+  --ring: 162 70% 45%;
+  
+  --chart-1: 162 70% 45%;
+  --chart-2: 14 90% 65%;
+  --chart-3: 190 80% 50%;
+  --chart-4: 45 90% 60%;
+  --chart-5: 260 60% 60%;
+  
   --font-sans: Plus Jakarta Sans, Inter, sans-serif;
   --font-serif: Georgia, serif;
   --font-mono: Menlo, monospace;
-  --radius: .5rem;
+  
+  --radius: 1rem; /* Mais arredondado para suavidade */
+  
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.05);
-  --shadow: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.08);
-  --shadow-md: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 2px 4px -1px hsl(0 0% 0% / 0.10);
-  --shadow-lg: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 4px 6px -1px hsl(0 0% 0% / 0.12);
-  --shadow-xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 8px 10px -1px hsl(0 0% 0% / 0.15);
+  --shadow-sm: 0px 2px 8px -2px hsl(162 50% 20% / 0.05);
+  --shadow: 0px 4px 12px -2px hsl(162 50% 20% / 0.08);
+  --shadow-md: 0px 8px 24px -4px hsl(162 50% 20% / 0.10);
+  --shadow-lg: 0px 12px 32px -4px hsl(162 50% 20% / 0.12);
+  --shadow-xl: 0px 20px 48px -8px hsl(162 50% 20% / 0.15);
   --shadow-2xl: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
+  
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
@@ -107,46 +123,58 @@
 }
 
 .dark {
+  /* Dark mode ajustado para não ser 'preto total', mas um azul/verde profundo */
   --button-outline: rgba(255,255,255, .10);
   --badge-outline: rgba(255,255,255, .05);
   --opaque-button-border-intensity: 9;
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
-  --background: 0 0% 7%;
-  /* No tema escuro, manter verde claro para leitura */
-  --foreground: 148 78% 24%;
-  --border: 0 0% 18%;
-  --card: 0 0% 9%;
-  --card-foreground: 148 78% 24%;
-  --card-border: 0 0% 12%;
-  --sidebar: 0 0% 11%;
-  --sidebar-foreground: 0 0% 95%;
-  --sidebar-border: 0 0% 14%;
-  --sidebar-primary: 168 76% 48%;
-  --sidebar-primary-foreground: 168 76% 98%;
-  --sidebar-accent: 0 0% 15%;
-  --sidebar-accent-foreground: 0 0% 95%;
-  --sidebar-ring: 168 76% 48%;
-  --popover: 0 0% 13%;
-  --popover-foreground: 0 0% 95%;
-  --popover-border: 0 0% 16%;
-  --primary: 168 76% 48%;
-  --primary-foreground: 168 76% 98%;
-  --secondary: 195 78% 35%;
-  --secondary-foreground: 195 78% 98%;
-  --muted: 0 0% 16%;
-  --muted-foreground: 148 78% 24%;
-  --accent: 28 92% 58%;
-  --accent-foreground: 28 92% 98%;
-  --destructive: 0 84% 42%;
-  --destructive-foreground: 0 84% 98%;
-  --input: 0 0% 30%;
-  --ring: 168 76% 48%;
-  --chart-1: 168 76% 48%;
-  --chart-2: 195 78% 35%;
-  --chart-3: 28 92% 58%;
-  --chart-4: 168 60% 55%;
-  --chart-5: 195 65% 42%;
+  
+  --background: 220 20% 10%;
+  --foreground: 220 10% 95%;
+  
+  --border: 220 15% 20%;
+  --card: 220 20% 13%;
+  --card-foreground: 220 10% 95%;
+  --card-border: 220 15% 18%;
+  
+  --sidebar: 220 20% 12%;
+  --sidebar-foreground: 220 10% 95%;
+  --sidebar-border: 220 15% 18%;
+  --sidebar-primary: 162 70% 50%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 15% 20%;
+  --sidebar-accent-foreground: 220 10% 95%;
+  --sidebar-ring: 162 70% 50%;
+  
+  --popover: 220 20% 13%;
+  --popover-foreground: 220 10% 95%;
+  --popover-border: 220 15% 18%;
+  
+  --primary: 162 70% 50%;
+  --primary-foreground: 0 0% 100%;
+  
+  --secondary: 14 90% 65%;
+  --secondary-foreground: 0 0% 100%;
+  
+  --muted: 220 15% 20%;
+  --muted-foreground: 220 10% 60%;
+  
+  --accent: 190 80% 50%;
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  
+  --input: 220 15% 25%;
+  --ring: 162 70% 50%;
+  
+  --chart-1: 162 70% 50%;
+  --chart-2: 14 90% 65%;
+  --chart-3: 190 80% 50%;
+  --chart-4: 45 90% 60%;
+  --chart-5: 260 60% 60%;
+  
   --shadow-2xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-xs: 0px 2px 0px 0px hsl(0 0% 0% / 0.00);
   --shadow-sm: 0px 2px 0px 0px hsl(0 0% 0% / 0.00), 0px 1px 2px -1px hsl(0 0% 0% / 0.08);

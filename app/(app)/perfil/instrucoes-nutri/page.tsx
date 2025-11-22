@@ -221,10 +221,10 @@ export default function NutritionistInstructionsPage() {
 
         {/* Seção 1: IA (somente leitura, com popup grande) - visível só para nutricionistas (modo profissional) */}
         {isNutriPro && (
-          <section className="rounded-xl border border-border bg-card p-4 md:p-6 space-y-4">
+          <section className="rounded-xl border border-gray-300 bg-gray-100 p-4 md:p-6 space-y-4">
             <h2 className="text-lg md:text-xl font-semibold">Instruções da IA</h2>
             <textarea
-              className="w-full min-h-48 rounded-lg border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="w-full min-h-48 rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none focus:ring-2 focus:ring-blue-500"
               value={isInitialLoading ? loadingPlaceholder : aiInstructionsText}
               readOnly
               onClick={() => setShowAIPopup(true)}
@@ -234,7 +234,7 @@ export default function NutritionistInstructionsPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmFetch(true)}
-                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-primary/10 disabled:opacity-60"
                 disabled={isFetchingAI}
               >
                 {isFetchingAI ? (
@@ -252,7 +252,7 @@ export default function NutritionistInstructionsPage() {
                   setNutritionistInstructionsText(isInitialLoading ? "" : aiInstructionsText);
                   setShowEditablePopup(true);
                 }}
-                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-muted"
+                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-medium hover:bg-primary/10"
               >
                 Copiar conteúdo da IA
               </button>
@@ -261,10 +261,10 @@ export default function NutritionistInstructionsPage() {
         )}
 
         {/* Seção 2: Personalizadas do Nutri (editável, com popup grande) */}
-        <section className="rounded-xl border border-border bg-card p-4 md:p-6 space-y-4">
+        <section className="rounded-xl border border-gray-300 bg-gray-100 p-4 md:p-6 space-y-4">
           <h2 className="text-lg md:text-xl font-semibold">Instruções Personalizadas do Nutricionista</h2>
           <textarea
-            className="w-full min-h-64 rounded-lg border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            className="w-full min-h-64 rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none focus:ring-2 focus:ring-blue-500"
             value={nutritionistInstructionsText}
             onChange={(e) => setNutritionistInstructionsText(e.target.value)}
             onClick={() => setShowEditablePopup(true)}
@@ -278,7 +278,7 @@ export default function NutritionistInstructionsPage() {
                 <button
                   type="button"
                   onClick={handleSaveNutritionistInstructions}
-                  className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-muted"
+                  className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-primary/10"
                 >
                   Salvar instruções do nutricionista
                 </button>
@@ -302,19 +302,19 @@ export default function NutritionistInstructionsPage() {
       {showAIPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowAIPopup(false)} aria-hidden="true" />
-          <div className="relative z-10 w-[90vw] h-[90vh] rounded-xl border border-border bg-background p-4 md:p-6 shadow-xl flex flex-col">
+          <div className="relative z-10 w-[90vw] h-[90vh] rounded-xl border border-gray-300 bg-white p-4 md:p-6 shadow-xl flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold">Instruções da IA (visualização)</h3>
               <button
                 type="button"
                 onClick={() => setShowAIPopup(false)}
-                className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
+                className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm hover:bg-primary/10"
               >
                 Fechar
               </button>
             </div>
             <textarea
-              className="flex-1 w-full rounded-lg border border-input bg-background p-3 text-sm outline-none"
+              className="flex-1 w-full rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none"
               value={aiInstructionsText}
               readOnly
             />
@@ -326,21 +326,21 @@ export default function NutritionistInstructionsPage() {
       {showEditablePopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowEditablePopup(false)} aria-hidden="true" />
-          <div className="relative z-10 w-[90vw] h-[90vh] rounded-xl border border-border bg-background p-4 md:p-6 shadow-xl flex flex-col">
+          <div className="relative z-10 w-[90vw] h-[90vh] rounded-xl border border-gray-300 bg-white p-4 md:p-6 shadow-xl flex flex-col">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold">Editar instruções do nutricionista</h3>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setShowEditablePopup(false)}
-                  className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm hover:bg-muted"
+                  className="inline-flex items-center justify-center rounded-md border px-3 py-1.5 text-sm hover:bg-primary/10"
                 >
                   Fechar
                 </button>
               </div>
             </div>
             <textarea
-              className="flex-1 w-full rounded-lg border border-input bg-background p-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="flex-1 w-full rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none focus:ring-2 focus:ring-blue-500"
               value={nutritionistInstructionsText}
               onChange={(e) => setNutritionistInstructionsText(e.target.value)}
             />
@@ -352,7 +352,7 @@ export default function NutritionistInstructionsPage() {
       {showConfirmFetch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowConfirmFetch(false)} aria-hidden="true" />
-          <div className="relative z-10 w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-xl">
+          <div className="relative z-10 w-full max-w-md rounded-xl border border-gray-300 bg-white p-6 shadow-xl">
             <h3 className="text-lg font-semibold mb-2">Confirmar ação</h3>
             <p className="text-sm opacity-80 mb-4">
               Deseja criar um plano alimentar para este aluno agora e buscar novas sugestões da IA?
@@ -361,7 +361,7 @@ export default function NutritionistInstructionsPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmFetch(false)}
-                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm hover:bg-muted"
+                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm hover:bg-primary/10"
               >
                 Não
               </button>
@@ -388,7 +388,7 @@ export default function NutritionistInstructionsPage() {
             onClick={() => setShowConfirm(false)}
             aria-hidden="true"
           />
-          <div className="relative z-10 w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-xl">
+          <div className="relative z-10 w-full max-w-md rounded-xl border border-gray-300 bg-white p-6 shadow-xl">
             <h3 className="text-lg font-semibold mb-2">Confirmar ação</h3>
             <p className="text-sm opacity-80 mb-4">
               Você tem certeza que deseja criar este novo plano alimentar?
@@ -397,7 +397,7 @@ export default function NutritionistInstructionsPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirm(false)}
-                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm hover:bg-muted"
+                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm hover:bg-primary/10"
               >
                 Cancelar
               </button>
@@ -416,5 +416,3 @@ export default function NutritionistInstructionsPage() {
     </div>
   );
 }
-
-

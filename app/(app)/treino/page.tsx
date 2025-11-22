@@ -226,9 +226,10 @@ export default function TreinoPage() {
                         onClose={handleCloseModal} 
                         title={`Treino de ${weekdayName(selectedWorkout.weekday)} - ${selectedWorkout.name}`}
                         footer={<Button onClick={handleCloseModal}>Fechar</Button>}
+                        maxWidth="max-w-[96vw] sm:max-w-3xl"
                     >
                         {/* Responsivo: em mobile (>= ~360px), dar mais espaço ao header/footer; em desktop, usar 90% */}
-                        <div className="w-[96vw] sm:w-[90vw] max-w-[95vw] sm:max-w-3xl max-h-[85vh] sm:max-h-[90vh] p-3 flex flex-col">
+                        <div className="w-full max-h-[85vh] sm:max-h-[90vh] p-3 flex flex-col">
                           <div className="h-[60vh] sm:h-[70vh] overflow-y-auto px-3 pt-3 pb-8">
                             {exercises.length === 0 ? (
                               <p className="text-sm text-gray-600">Sem exercícios cadastrados para este treino.</p>

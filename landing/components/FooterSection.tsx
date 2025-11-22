@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Button } from "@landing/components/ui/button";
 import Link from "next/link";
+import { Coffee } from "lucide-react";
 
 export default function FooterSection() {
   return (
@@ -70,6 +71,10 @@ export default function FooterSection() {
           
           <div className="text-center mt-8 text-sm text-muted-foreground">
             © 2025 ZapNutri. Todos os direitos reservados.
+          </div>
+          
+          <div className="text-center mt-4 text-sm text-muted-foreground">
+            <Coffee className="inline w-4 h-4 mr-2" /> feito (com muito café) por pastel apps
           </div>
         </div>
       </div>

@@ -89,8 +89,9 @@ interface DialogProps {
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  maxWidth?: string;
 }
-export const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children, footer }) => {
+export const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children, footer, maxWidth = 'max-w-lg' }) => {
   if (!isOpen) return null;
 
   return (
@@ -102,7 +103,7 @@ export const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg m-4 bg-white rounded-2xl shadow-xl"
+        className={`relative w-full ${maxWidth} m-4 bg-white rounded-2xl shadow-xl`}
         onClick={e => e.stopPropagation()} // Prevent closing when clicking inside
       >
         <div className="flex items-start justify-between p-5 border-b rounded-t border-gray-200">

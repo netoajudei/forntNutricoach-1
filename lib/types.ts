@@ -188,7 +188,7 @@ export interface OnboardingData {
   preferenciasAlimentares: {
     restricoes: string[];
     alimentosNaoGosta: string;
-    alimentosFavoritos: string;
+    alimentosDisponiveis: string;
     disposicaoCozinhar: string;
     orcamento: string;
   };

@@ -14,7 +14,7 @@ const initialOnboardingData: OnboardingData = {
   saude: { condicoesMedicas: '', medicacoes: '', alergias: '' },
   lesoes: { lesoesLimitacoes: '' },
   rotina: { profissao: '', horarioAcordar: '', horarioDormir: '' },
-  preferenciasAlimentares: { restricoes: [], alimentosNaoGosta: '', alimentosFavoritos: '', disposicaoCozinhar: '', orcamento: '' },
+  preferenciasAlimentares: { restricoes: [], alimentosNaoGosta: '', alimentosDisponiveis: '', disposicaoCozinhar: '', orcamento: '' },
   preferenciasTreino: { local: '', equipamentos: [], experiencia: '', diasPreferenciais: [], horariosPreferenciais: [] },
   objetivo: { meta: '', prazo: '', motivacao: '' },
   medidasCorporais: { data: '', peso: '', altura: '', pescoco: '', peito: '', cintura: '', quadril: '', bracoDireito: '', bracoEsquerdo: '', coxaDireita: '', coxaEsquerda: '', panturrilhaDireita: '', panturrilhaEsquerda: '', gordura: '', notas: '' },
@@ -152,7 +152,7 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
             .split(',')
             .map(s => s.trim())
             .filter(Boolean);
-        setLikes(toArray(data.alimentosFavoritos));
+        setLikes(toArray(data.alimentosDisponiveis));
         setDislikes(toArray(data.alimentosNaoGosta));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -191,7 +191,7 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
 
     // Sincronizar textareas quando likes/dislikes mudarem (simula digitação)
     useEffect(() => {
-        updateData('alimentosFavoritos', likes.join(', '));
+        updateData('alimentosDisponiveis', likes.join(', '));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [likes]);
     useEffect(() => {
@@ -300,10 +300,10 @@ const PreferenciasAlimentaresStep: React.FC<{ data: OnboardingData['preferencias
                     rows={2}
                 />
                 <FormTextarea 
-                    label="Alimentos favoritos (vírgulas)" 
+                    label="Alimentos disponíveis (vírgulas)" 
                     value={data.alimentosFavoritos} 
                     onChange={e => updateData('alimentosFavoritos', e.target.value)}
-                    placeholder="Ex: Frango, Batata doce, Brócolis"
+                    placeholder="Ex: Frango, Ovos, Arroz"
                     rows={2}
                 />
             </div>
