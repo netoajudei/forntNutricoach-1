@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, Button } from '@/components';
+import AlertDialog from '@/components/ui/AlertDialog';
 import type { OnboardingData, MedidasCorporais } from '@/lib/types';
 import { salvarOnboarding } from '@/lib/services/onboarding.service';
 import { createClient } from '@/lib/supabase/client';
@@ -448,11 +449,127 @@ const GerandoPlanoFinal: React.FC = () => (
 );
 
 
+
+
 export default function OnboardingPage() {
+    const router = useRouter();
     const [step, setStep] = useState(1);
     const [data, setData] = useState<OnboardingData>(initialOnboardingData);
     const [isFinalizing, setIsFinalizing] = useState(false);
-    const router = useRouter();
+
+    // Dialog State
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [dialogContent, setDialogContent] = useState({ title: '', message: '' });
+
+    const showError = (title: string, message: string) => {
+        setDialogContent({ title, message });
+        setDialogOpen(true);
+    };
+
+    const validateStep = (currentStepIndex: number): boolean => {
+        // step is 1-based in this component logic
+        switch (currentStepIndex) {
+            case 1: // Dados Básicos
+                if (!data.dadosBasicos.nomeCompleto.trim()) {
+                    showError('Nome Obrigatório', 'Por favor, informe seu nome completo para continuarmos.');
+                    return false;
+                }
+                if (!data.dadosBasicos.dataNascimento) {
+                    showError('Data de Nascimento', 'Precisamos da sua data de nascimento para calcular suas necessidades.');
+                    return false;
+                }
+                if (!data.dadosBasicos.sexo) {
+                    showError('Sexo', 'Por favor, selecione seu sexo biológico para cálculos hormonais e metabólicos.');
+                    return false;
+                }
+                return true;
+
+            case 4: // Rotina
+                if (!data.rotina.profissao.trim()) {
+                    showError('Profissão', 'Informe sua profissão ou ocupação principal.');
+                    return false;
+                }
+                if (!data.rotina.horarioAcordar) {
+                    showError('Horário de Acordar', 'Informe o horário que você costuma acordar.');
+                    return false;
+                }
+                if (!data.rotina.horarioDormir) {
+                    showError('Horário de Dormir', 'Informe o horário que você costuma dormir.');
+                    return false;
+                }
+                return true;
+
+            case 5: // Preferências Alimentares
+                if (!data.preferenciasAlimentares.disposicaoCozinhar) {
+                    showError('Cozinhar', 'Precisamos saber sua disposição para cozinhar.');
+                    return false;
+                }
+                if (!data.preferenciasAlimentares.orcamento) {
+                    showError('Orçamento', 'Selecione uma faixa de orçamento para adaptarmos a dieta.');
+                    return false;
+                }
+                return true;
+
+            case 6: // Preferências Treino
+                if (!data.preferenciasTreino.local) {
+                    showError('Local de Treino', 'Onde você pretende treinar? (Academia, Casa, Ao Ar Livre)');
+                    return false;
+                }
+                if (!data.preferenciasTreino.experiencia) {
+                    showError('Experiência', 'Qual seu nível de experiência com treinos?');
+                    return false;
+                }
+                if (data.preferenciasTreino.diasPreferenciais.length < 2) {
+                    showError('Dias de Treino', 'Selecione pelo menos 2 dias na semana para treinar.');
+                    return false;
+                }
+                if (data.preferenciasTreino.horariosPreferenciais.length === 0) {
+                    showError('Horário de Treino', 'Selecione pelo menos um período preferencial para treinar.');
+                    return false;
+                }
+                return true;
+
+            case 7: // Objetivo
+                if (!data.objetivo.meta.trim()) {
+                    showError('Meta Principal', 'Defina um nome para sua meta (ex: Emagrecer 5kg).');
+                    return false;
+                }
+
+                const prazo = Number(data.objetivo.prazo);
+                const meta = Number(data.objetivo.motivacao);
+
+                if (data.objetivo.prazo && (isNaN(prazo) || prazo <= 0 || prazo > 300)) {
+                    showError('Prazo/Valor Inicial Inválido', 'O valor deve ser um número válido e realista (até 300kg).');
+                    return false;
+                }
+                if (data.objetivo.motivacao && (isNaN(meta) || meta <= 0 || meta > 300)) {
+                    showError('Meta Inválida', 'O valor da meta deve ser um número válido e realista (até 300kg).');
+                    return false;
+                }
+                return true;
+
+            case 8: // Medidas Corporais
+                if (!data.medidasCorporais.altura) {
+                    showError('Altura', 'Sua altura é fundamental para o cálculo do IMC e TMB.');
+                    return false;
+                }
+                if (!data.medidasCorporais.peso) {
+                    showError('Peso', 'Seu peso atual é necessário para iniciarmos o planejamento.');
+                    return false;
+                }
+
+                const peso = Number(data.medidasCorporais.peso);
+                if (isNaN(peso) || peso <= 0 || peso > 300) {
+                    showError('Peso Inválido', 'Por favor, insira um peso válido (até 300kg).');
+                    return false;
+                }
+
+                return true;
+
+            default:
+                return true;
+        }
+    };
 
     const handleUpdate = (section: keyof OnboardingData) => (field: any, value: any) => {
         setData(prev => ({
@@ -464,26 +581,34 @@ export default function OnboardingPage() {
         }));
     };
 
-    const handleNext = async () => {
-        if (step < TOTAL_STEPS) {
-            setStep(s => s + 1);
-        } else {
-            setIsFinalizing(true);
-            try {
-                const result = await salvarOnboarding(data);
-                if (result?.success) {
-                    router.push('/dashboard');
-                    router.refresh();
-                } else {
-                    throw new Error('Falha ao salvar dados');
-                }
-            } catch (error) {
-                console.error('Erro ao salvar onboarding:', error);
-                const errorMessage = error instanceof Error
-                    ? error.message
-                    : 'Erro desconhecido ao finalizar cadastro';
-                alert(`Erro: ${errorMessage}`);
-                setIsFinalizing(false);
+    const handleSubmit = async () => {
+        setIsFinalizing(true);
+        try {
+            const result = await salvarOnboarding(data);
+            if (result?.success) {
+                router.push('/onboarding-passo-2');
+                router.refresh();
+            } else {
+                throw new Error('Falha ao salvar dados');
+            }
+        } catch (error) {
+            console.error('Erro ao salvar onboarding:', error);
+            const errorMessage = error instanceof Error
+                ? error.message
+                : 'Erro desconhecido ao finalizar cadastro';
+            // Use dialog instead of alert
+            showError('Erro ao Salvar', errorMessage);
+            setIsFinalizing(false);
+        }
+    };
+
+    const handleNext = () => {
+        if (validateStep(step)) {
+            if (step < TOTAL_STEPS) {
+                setStep(s => s + 1);
+                window.scrollTo(0, 0);
+            } else {
+                handleSubmit();
             }
         }
     };
@@ -510,8 +635,14 @@ export default function OnboardingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <Card className="w-full max-w-2xl">
+        <div className="min-h-screen bg-gray-50 py-8 px-4">
+            <AlertDialog
+                isOpen={dialogOpen}
+                onClose={() => setDialogOpen(false)}
+                title={dialogContent.title}
+                message={dialogContent.message}
+            />
+            <Card className="max-w-3xl mx-auto">
                 {isFinalizing ? (
                     <GerandoPlanoFinal />
                 ) : (
@@ -524,4 +655,4 @@ export default function OnboardingPage() {
             </Card>
         </div>
     );
-};
+}

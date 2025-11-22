@@ -257,3 +257,87 @@ export const salvarOnboarding = async (data: OnboardingData) => {
 
   return { success: true };
 };
+
+export const linkStudentToProfessional = async (authUserId: string, professionalId: string) => {
+  const supabase = createClient();
+
+  // 1. Buscar o ID real do aluno
+  const { data: aluno, error: alunoError } = await supabase
+    .from('alunos')
+    .select('id')
+    .eq('auth_user_id', authUserId)
+    .maybeSingle();
+
+  if (alunoError || !aluno) {
+    return { success: false, error: 'Aluno não encontrado.' };
+  }
+
+  // 2. Chamar RPC de vínculo
+  const { error } = await supabase.rpc('vincular_aluno_profissional', {
+    p_aluno_id: aluno.id,
+    p_profissional_id: professionalId
+  });
+
+  if (error) {
+    console.error('Erro ao vincular aluno:', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+};
+
+export const submitSimplifiedOnboarding = async (payload: {
+  p_aluno_id: string;
+  p_profissional_id: string | null;
+  p_whatsapp: string;
+  p_tem_dieta_atual: boolean;
+  p_dieta_atual_texto: string;
+  p_tem_treino_atual: boolean;
+  p_treino_atual_texto: string;
+}) => {
+  const supabase = createClient();
+
+  // 1. Buscar o ID real do aluno na tabela 'alunos' usando o auth_user_id
+  const { data: aluno, error: alunoError } = await supabase
+    .from('alunos')
+    .select('id')
+    .eq('auth_user_id', payload.p_aluno_id)
+    .maybeSingle();
+
+  if (alunoError || !aluno) {
+    console.error('Erro ao buscar aluno:', alunoError);
+    return { success: false, error: 'Aluno não encontrado.' };
+  }
+
+  const realAlunoId = aluno.id;
+
+  // 2. Chamar a RPC passando o ID da tabela alunos e o whatsapp
+  // O WhatsApp é passado para a RPC, mas NÃO atualizamos a tabela alunos manualmente.
+  const { data, error } = await supabase.rpc('submeter_onboarding_simplificado', {
+    p_aluno_id: realAlunoId,
+    p_profissional_id: payload.p_profissional_id,
+    p_whatsapp: payload.p_whatsapp,
+    p_tem_dieta_atual: payload.p_tem_dieta_atual,
+    p_dieta_atual_texto: payload.p_dieta_atual_texto,
+    p_tem_treino_atual: payload.p_tem_treino_atual,
+    p_treino_atual_texto: payload.p_treino_atual_texto
+  });
+
+  if (error) {
+    console.error('Erro na RPC:', error);
+
+    // Check for unique violation or conflict
+    // Casting error to any to access status code safely if needed, though code is standard
+    const pgError = error as any;
+    if (pgError.code === '23505' || pgError.status === 409) {
+      return {
+        success: false,
+        error: 'Número de WhatsApp já cadastrado. Confira e tente novamente.'
+      };
+    }
+
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data };
+};
