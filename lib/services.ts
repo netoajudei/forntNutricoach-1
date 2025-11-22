@@ -1,12 +1,12 @@
-import { 
+import {
   mockUser, mockDailyDietSummary, mockDailyMeals, mockWeeklyDietPlan,
   mockWeeklyWorkoutProgram, mockWeightHistory,
   mockProgressSummary, mockWorkoutAnalytics,
   mockOnboardingData, mockWeeklyMacroSummary, mockMonthlyMacroSummary, mockAnnualMacroSummary, mockDietMetricsSummary, mockBodyMetricsHistory, mockBodyMetricsSummary,
   mockWorkoutMetricsSummary, mockExerciseLoadHistory, mockWeeklyCompletionHistory
 } from './mocks';
-import type { 
-  UserProfile, DailyDietSummary, Meal, WeeklyDietDay, 
+import type {
+  UserProfile, DailyDietSummary, Meal, WeeklyDietDay,
   WeeklyWorkoutDay, WeightHistoryEntry, ProgressSummary, WorkoutAnalytics, OnboardingData, WeeklyMacroSummary, MonthlyMacroSummary, AnnualMacroSummary, DietMetricsSummary, BodyMetricsHistoryEntry, BodyMetricsSummary,
   WorkoutMetricsSummary, ExerciseLoadHistory, WeeklyCompletionHistory
 } from './types';
@@ -154,8 +154,8 @@ export const userService = {
       lesoes: {
         lesoesLimitacoes: p.lesoes_limitacoes
           ? (typeof p.lesoes_limitacoes === 'object' && p.lesoes_limitacoes?.descricao
-              ? String(p.lesoes_limitacoes.descricao)
-              : JSON.stringify(p.lesoes_limitacoes))
+            ? String(p.lesoes_limitacoes.descricao)
+            : JSON.stringify(p.lesoes_limitacoes))
           : '',
       },
       rotina: {
@@ -166,7 +166,7 @@ export const userService = {
       preferenciasAlimentares: {
         restricoes: toArray(p.restricoes_alimentares),
         alimentosNaoGosta: toArray(p.alimentos_nao_gosta).join(', '),
-        alimentosFavoritos: toArray(p.alimentos_favoritos).join(', '),
+        alimentosDisponiveis: toArray(p.alimentos_favoritos).join(', '),
         disposicaoCozinhar: toStr(p.disposicao_cozinhar),
         orcamento: toStr(p.orcamento_alimentar),
       },

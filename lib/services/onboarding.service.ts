@@ -91,8 +91,8 @@ export const salvarOnboarding = async (data: OnboardingData) => {
   const alimentosNaoGosta = sanitizeToArray(
     data.preferenciasAlimentares.alimentosNaoGosta,
   );
-  const alimentosFavoritos = sanitizeToArray(
-    data.preferenciasAlimentares.alimentosFavoritos,
+  const alimentosDisponiveis = sanitizeToArray(
+    data.preferenciasAlimentares.alimentosDisponiveis,
   );
 
   const { error: prefAlimentaresError } = await supabase
@@ -107,7 +107,7 @@ export const salvarOnboarding = async (data: OnboardingData) => {
         alimentos_nao_gosta:
           alimentosNaoGosta.length > 0 ? alimentosNaoGosta : null,
         alimentos_favoritos:
-          alimentosFavoritos.length > 0 ? alimentosFavoritos : null,
+          alimentosDisponiveis.length > 0 ? alimentosDisponiveis : null,
         disposicao_cozinhar: toNullableString(
           data.preferenciasAlimentares.disposicaoCozinhar,
         ),
