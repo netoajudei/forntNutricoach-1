@@ -7,6 +7,8 @@ import { Card, Button } from '@/components';
 import AlertDialog from '@/components/ui/AlertDialog';
 import { CheckCircle, User, Activity, Utensils } from 'lucide-react';
 import { submitSimplifiedOnboarding } from '@/lib/services/onboarding.service';
+import { OnboardingSuccessModal } from '@/components/ui/OnboardingSuccessModal';
+import { Confetti } from '@/components/ui/Confetti';
 
 export default function OnboardingStep2Page() {
     const router = useRouter();
@@ -26,10 +28,21 @@ export default function OnboardingStep2Page() {
     // Dialog State
     const [dialogOpen, setDialogOpen] = useState(false);
     const [dialogContent, setDialogContent] = useState({ title: '', message: '' });
+    // Success Modal State
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    // Debug: log when success modal visibility changes
+    React.useEffect(() => {
+        console.log('showSuccessModal state:', showSuccessModal);
+    }, [showSuccessModal]);
 
     const showError = (title: string, message: string) => {
         setDialogContent({ title, message });
         setDialogOpen(true);
+    };
+
+    const handleSuccessModalClose = () => {
+        setShowSuccessModal(false);
+        router.push('/dashboard');
     };
 
     useEffect(() => {
@@ -95,10 +108,13 @@ export default function OnboardingStep2Page() {
 
             const result = await submitSimplifiedOnboarding(payload);
 
+            console.log('Onboarding result:', result);
             if (result.success) {
+                // Show success modal with confetti
+                console.log('Onboarding success, showing modal');
+                setShowSuccessModal(true);
                 // Clear session storage
                 sessionStorage.removeItem('professional_invite_id');
-                router.push('/dashboard');
             } else {
                 // Show specific error message from service
                 showError('Erro ao Salvar', result.error || 'Erro ao salvar dados');
@@ -287,6 +303,13 @@ export default function OnboardingStep2Page() {
                     </Button>
                 </form>
             </Card>
+
+            {/* Success Modal with Confetti */}
+            {showSuccessModal && <Confetti />}
+            <OnboardingSuccessModal
+                isOpen={showSuccessModal}
+                onClose={handleSuccessModalClose}
+            />
         </div>
     );
 }

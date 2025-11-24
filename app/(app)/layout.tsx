@@ -7,20 +7,45 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { HomeIcon, FlameIcon, DumbbellIcon, LineChartIcon, UserIcon, LogOutIcon } from '@/components';
-import { isImpersonating, stopImpersonation } from '@/lib/impersonation';
+import { isImpersonating, stopImpersonation, getImpersonation } from '@/lib/impersonation';
 
 const navItems = [
-  { path: "/dashboard", label: "Dashboard", icon: HomeIcon },
-  { path: "/dieta", label: "Dieta", icon: FlameIcon },
-  { path: "/treino", label: "Treino", icon: DumbbellIcon },
-  { path: "/progresso", label: "Progresso", icon: LineChartIcon },
-  { path: "/perfil", label: "Perfil", icon: UserIcon },
+    { path: "/dashboard", label: "Dashboard", icon: HomeIcon },
+    { path: "/dieta", label: "Dieta", icon: FlameIcon },
+    { path: "/treino", label: "Treino", icon: DumbbellIcon },
+    { path: "/progresso", label: "Progresso", icon: LineChartIcon },
+    { path: "/perfil", label: "Perfil", icon: UserIcon },
 ];
 
 const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     const pathname = usePathname();
     const router = useRouter();
-    const showBackToPro = typeof window !== 'undefined' ? isImpersonating() : false;
+    const supabase = createClient();
+
+    // Check if user is professional (not aluno role)
+    const [userRole, setUserRole] = React.useState<string | null>(null);
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+        const checkRole = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { data: aluno } = await supabase
+                .from('alunos')
+                .select('role')
+                .eq('auth_user_id', user.id)
+                .maybeSingle();
+
+            setUserRole(aluno?.role || null);
+        };
+        checkRole();
+    }, []);
+
+    // Show back button only if impersonating AND user is not an aluno
+    const showBackToPro = mounted && isImpersonating() && userRole !== 'aluno';
+
     return (
         <aside className="w-64 flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
             <div className="h-20 flex items-center justify-center px-4 border-b border-gray-200">
@@ -49,11 +74,10 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                         <Link
                             key={item.path}
                             href={item.path}
-                            className={`flex items-center px-4 py-3 text-sm font-semibold rounded-lg transition-colors ${
-                            isActive
+                            className={`flex items-center px-4 py-3 text-sm font-semibold rounded-lg transition-colors ${isActive
                                 ? 'bg-green-50 text-green-600'
                                 : 'text-gray-500 hover:bg-green-50 hover:text-green-600'
-                            }`}
+                                }`}
                         >
                             <item.icon className="h-5 w-5 mr-3" />
                             {item.label}
@@ -62,11 +86,11 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
                 })}
             </nav>
             <div className="px-4 py-6 border-t border-gray-200">
-                <button 
+                <button
                     onClick={onLogout}
                     className="flex items-center w-full px-4 py-3 text-sm font-semibold rounded-lg text-gray-500 hover:bg-green-50 hover:text-green-600"
                 >
-                    <LogOutIcon className="h-5 w-5 mr-3"/>
+                    <LogOutIcon className="h-5 w-5 mr-3" />
                     Sair
                 </button>
             </div>
@@ -79,14 +103,13 @@ const BottomNavBar: React.FC = () => {
     return (
         <nav className="fixed bottom-0 left-0 right-0 h-20 bg-white border-t border-gray-200 flex md:hidden items-center justify-around z-10">
             {navItems.map((item) => {
-                 const isActive = pathname?.startsWith(item.path);
+                const isActive = pathname?.startsWith(item.path);
                 return (
                     <Link
                         key={item.path}
                         href={item.path}
-                        className={`flex flex-col items-center justify-center text-xs w-full h-full transition-colors ${
-                        isActive ? 'text-green-600' : 'text-gray-500 hover:text-green-600'
-                        }`}
+                        className={`flex flex-col items-center justify-center text-xs w-full h-full transition-colors ${isActive ? 'text-green-600' : 'text-gray-500 hover:text-green-600'
+                            }`}
                     >
                         <item.icon className="h-6 w-6 mb-1" />
                         <span>{item.label}</span>
@@ -99,26 +122,26 @@ const BottomNavBar: React.FC = () => {
 
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const supabase = createClient();
-  
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
-    router.refresh();
-  };
+    const router = useRouter();
+    const supabase = createClient();
 
-  return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="hidden md:flex">
-        <Sidebar onLogout={handleLogout} />
-      </div>
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        router.push('/login');
+        router.refresh();
+    };
 
-      <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
-          {children}
-      </main>
+    return (
+        <div className="flex h-screen bg-gray-50">
+            <div className="hidden md:flex">
+                <Sidebar onLogout={handleLogout} />
+            </div>
 
-      <BottomNavBar />
-    </div>
-  );
+            <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+                {children}
+            </main>
+
+            <BottomNavBar />
+        </div>
+    );
 }

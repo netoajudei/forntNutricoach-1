@@ -6,6 +6,9 @@ import { createClient } from "@/lib/supabase/client";
 import { useAlunoId } from "@/lib/aluno";
 import { getImpersonation, isImpersonating } from "@/lib/impersonation";
 
+import { MarkdownRenderer } from "@/components/ui/MarkdownRenderer";
+import { LoadingModal } from "@/components/animations/LoadingModal";
+
 export default function PersonalTrainerInstructionsPage() {
   // Placeholder texto curto enquanto carrega
   const loadingPlaceholder = "Carregando instruções da IA...";
@@ -29,15 +32,19 @@ export default function PersonalTrainerInstructionsPage() {
   const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const alunoIdHook = useAlunoId();
   const router = useRouter();
+  // New state for editable AI message
+  const [customMessage, setCustomMessage] = useState<string>("Por favor crie o plano de treino para esse aluno com base nas informacoes fornecidas por ele.");
 
   // Carrega dados do Supabase: instrucoes_personal do aluno logado
   const refreshFromSupabase = async () => {
+    console.log('[PersonalPage] refreshFromSupabase called');
     setLoadError(null);
     setIsInitialLoading(true);
     const supabase = createClient();
     try {
       // Usar aluno_id global em vez de user.id
       const { alunoId } = alunoIdHook;
+      console.log('[PersonalPage] alunoId:', alunoId);
       if (!alunoId) {
         setLoadError("Aluno não encontrado.");
         setAiInstructionsText("Não foi possível carregar as instruções da IA.");
@@ -83,23 +90,6 @@ export default function PersonalTrainerInstructionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alunoIdHook.loading]);
 
-  // Actions (stubs)
-  const handleFetchAISuggestions = () => {
-    console.log("Buscar sugestões da IA (stub)");
-    alert("Buscar sugestões da IA (stub)");
-  };
-
-  const handleCopyAIContent = async () => {
-    try {
-      await navigator.clipboard.writeText(aiInstructionsText);
-      console.log("Conteúdo da IA copiado (stub)");
-      alert("Conteúdo da IA copiado!");
-    } catch (err) {
-      console.error(err);
-      alert("Não foi possível copiar o conteúdo.");
-    }
-  };
-
   // Helpers
   const upsertPersonalInstructions = async (alunoId: string, text: string) => {
     const supabase = createClient();
@@ -120,6 +110,89 @@ export default function PersonalTrainerInstructionsPage() {
         .from("instrucoes_personal")
         .insert({ aluno_id: alunoId, instrucoes_texto: text });
       if (insErr) throw insErr;
+    }
+  };
+
+  const upsertAIInstructions = async (alunoId: string, aiText: string) => {
+    const supabase = createClient();
+    const { data: existing, error: fetchErr } = await supabase
+      .from("instrucoes_personal")
+      .select("id")
+      .eq("aluno_id", alunoId)
+      .maybeSingle();
+    if (fetchErr) throw fetchErr;
+    if (existing) {
+      const { error: updErr } = await supabase
+        .from("instrucoes_personal")
+        .update({ instrucoes_da_ia: aiText })
+        .eq("id", (existing as any).id);
+      if (updErr) throw updErr;
+    } else {
+      const { error: insErr } = await supabase
+        .from("instrucoes_personal")
+        .insert({ aluno_id: alunoId, instrucoes_da_ia: aiText });
+      if (insErr) throw insErr;
+    }
+  };
+
+  const handleFetchAISuggestions = async (message?: string) => {
+    try {
+      setIsFetchingAI(true);
+      const { alunoId } = alunoIdHook;
+      if (!alunoId) {
+        alert("Aluno não encontrado.");
+        setIsFetchingAI(false);
+        return;
+      }
+      const supabase = createClient();
+      // Use provided message or fallback to customMessage state
+      const promptMessage = message ?? customMessage;
+      // Call Edge Function to generate AI instructions for personal trainer
+      const { data, error } = await supabase.functions.invoke("chat-personal", {
+        body: {
+          aluno_id: alunoId,
+          mensagem_personal: promptMessage,
+        },
+      });
+      if (error) {
+        console.error("invoke chat-personal error:", error);
+        alert("Falha ao buscar sugestões da IA.");
+        setIsFetchingAI(false);
+        return;
+      }
+      // Normalize possible return formats
+      const aiText: string =
+        (typeof data === "string" && data) ||
+        data?.resposta_ia ||
+        data?.text ||
+        data?.instrucoes ||
+        data?.instructions ||
+        data?.ia_text ||
+        "Sem instruções geradas pela IA.";
+
+      // Save to DB
+      await upsertAIInstructions(alunoId, aiText);
+
+      // Refresh UI
+      await refreshFromSupabase();
+
+      alert("Sugestões da IA atualizadas.");
+    } catch (err: any) {
+      console.error("fetch AI suggestions error:", err?.message || err);
+      alert("Falha ao buscar sugestões da IA.");
+    } finally {
+      setIsFetchingAI(false);
+    }
+  };
+
+  const handleCopyAIContent = async () => {
+    try {
+      await navigator.clipboard.writeText(aiInstructionsText);
+      console.log("Conteúdo da IA copiado");
+      alert("Conteúdo da IA copiado!");
+    } catch (err) {
+      console.error(err);
+      alert("Não foi possível copiar o conteúdo.");
     }
   };
 
@@ -173,10 +246,16 @@ export default function PersonalTrainerInstructionsPage() {
     }
   };
 
-  const actionsVisible = personalInstructionsText.trim().length > 0;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  const imp = typeof window !== "undefined" ? getImpersonation() : null;
-  const isPro = typeof window !== "undefined" ? isImpersonating() : false;
+  const actionsVisible = personalInstructionsText.trim().length > 0;
+  const imp = mounted ? getImpersonation() : null;
+  const isPro = mounted && isImpersonating();
+  // Relaxed check: any professional impersonating a student sees the professional view
+  const showProfessionalView = isPro;
 
   return (
     <div className="min-h-screen bg-white p-6 md:p-10">
@@ -187,16 +266,21 @@ export default function PersonalTrainerInstructionsPage() {
         </header>
 
         {/* Section 1: AI Instructions (read-only) - somente para profissionais */}
-        {isPro && (
+        {/* Section 1: AI Instructions (read-only) - somente para profissionais */}
+        {showProfessionalView && (
           <section className="rounded-xl border border-gray-300 bg-gray-100 p-4 md:p-6 space-y-4">
             <h2 className="text-lg md:text-xl font-semibold">Instruções da IA</h2>
-            <textarea
-              className="w-full min-h-48 rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none focus:ring-2 focus:ring-blue-500"
-              value={isInitialLoading ? loadingPlaceholder : aiInstructionsText}
-              readOnly
+            <div
+              className="w-full min-h-48 max-h-96 overflow-y-auto rounded-lg border border-gray-300 p-3 text-sm bg-white text-black cursor-pointer hover:ring-2 hover:ring-blue-500 transition-all"
               onClick={() => setShowAIPopup(true)}
               title="Clique para expandir"
-            />
+            >
+              {isInitialLoading ? (
+                <p className="text-gray-500 italic">{loadingPlaceholder}</p>
+              ) : (
+                <MarkdownRenderer content={aiInstructionsText} />
+              )}
+            </div>
             <div className="flex flex-wrap gap-3">
               <button
                 type="button"
@@ -229,50 +313,56 @@ export default function PersonalTrainerInstructionsPage() {
           </section>
         )}
 
-        {/* Section 2: Personal Trainer's Custom Instructions (editable) */}
-        <section className="rounded-xl border border-gray-300 bg-gray-100 p-4 md:p-6 space-y-4">
-          <h2 className="text-lg md:text-xl font-semibold">Instruções Personalizadas do Personal</h2>
-          <textarea
-            className="w-full min-h-64 rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none focus:ring-2 focus:ring-blue-500"
-            value={personalInstructionsText}
-            onChange={(e) => setPersonalInstructionsText(e.target.value)}
-            onClick={() => setShowEditablePopup(true)}
-            title="Clique para editar em tela cheia"
-            placeholder="Instruções do nutricionista"
-          />
+        {/* Section 2: Personal Trainer's Custom Instructions */}
+        {/* Section 2: Personal Trainer's Custom Instructions */}
+        {showProfessionalView ? (
+          <section className="rounded-xl border border-gray-300 bg-gray-100 p-4 md:p-6 space-y-4">
+            <h2 className="text-lg md:text-xl font-semibold">Instruções Personalizadas do Personal</h2>
+            <textarea
+              className="w-full min-h-64 rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none focus:ring-2 focus:ring-blue-500"
+              value={personalInstructionsText}
+              onChange={(e) => setPersonalInstructionsText(e.target.value)}
+              placeholder="Instruções do personal"
+            />
 
-          <div className="flex flex-wrap gap-3">
-            {actionsVisible && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleSavePersonalInstructions}
-                  className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-primary/10"
-                >
-                  Salvar instruções do personal
-                </button>
-                {isPro && (
+            <div className="flex flex-wrap gap-3">
+              {actionsVisible && (
+                <>
                   <button
                     type="button"
-                    onClick={() => setShowConfirm(true)}
-                    className="inline-flex items-center justify-center rounded-md border bg-accent text-accent-foreground px-4 py-2 text-sm font-semibold hover:brightness-110 disabled:opacity-60"
-                    disabled={isCreatingPlan}
+                    onClick={handleSavePersonalInstructions}
+                    className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-primary/10"
                   >
-                    {isCreatingPlan ? "Processando..." : "Criar Plano de Treino"}
+                    Salvar instruções do personal
                   </button>
-                )}
-              </>
-            )}
-            <button
-              type="button"
-              onClick={() => router.push("/dashboard/workout-programs")}
-              className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-primary/10"
-              title="Criar exercícios manualmente"
-            >
-              Criar exercício manualmente
-            </button>
-          </div>
-        </section>
+                  {isPro && (
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirm(true)}
+                      className="inline-flex items-center justify-center rounded-md border bg-accent text-accent-foreground px-4 py-2 text-sm font-semibold hover:brightness-110 disabled:opacity-60"
+                      disabled={isCreatingPlan}
+                    >
+                      {isCreatingPlan ? "Processando..." : "Criar Plano de Treino"}
+                    </button>
+                  )}
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => router.push("/dashboard/workout-programs")}
+                className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm font-semibold hover:bg-primary/10"
+                title="Criar exercícios manualmente"
+              >
+                Criar exercício manualmente
+              </button>
+            </div>
+          </section>
+        ) : (
+          <section className="rounded-xl border border-gray-300 bg-gray-100 p-4 md:p-6 space-y-4">
+            <h2 className="text-lg md:text-xl font-semibold">Instruções do Personal</h2>
+            <MarkdownRenderer content={personalInstructionsText || "Nenhuma instrução disponível."} />
+          </section>
+        )}
       </div>
 
       {/* Popup grande (90%) - leitura da IA */}
@@ -290,11 +380,9 @@ export default function PersonalTrainerInstructionsPage() {
                 Fechar
               </button>
             </div>
-            <textarea
-              className="flex-1 w-full rounded-lg border border-gray-300 p-3 text-sm bg-white text-black outline-none"
-              value={aiInstructionsText}
-              readOnly
-            />
+            <div className="flex-1 w-full overflow-y-auto rounded-lg border border-gray-300 p-3 text-sm bg-white text-black">
+              <MarkdownRenderer content={aiInstructionsText} />
+            </div>
           </div>
         </div>
       )}
@@ -328,37 +416,38 @@ export default function PersonalTrainerInstructionsPage() {
       {/* Confirmação antes de buscar IA (conforme solicitado) */}
       {showConfirmFetch && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowConfirmFetch(false)} aria-hidden="true" />
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowConfirmFetch(false)}
+            aria-hidden="true"
+          />
           <div className="relative z-10 w-full max-w-md rounded-xl border border-border bg-background p-6 shadow-xl">
-            <h3 className="text-lg font-semibold mb-2">Confirmar ação</h3>
-            <p className="text-sm opacity-80 mb-4">
-              Deseja criar um plano de treinos para este aluno agora e buscar novas sugestões da IA?
+            <h3 className="text-lg font-semibold mb-2">Editar mensagem para IA</h3>
+            <p className="text-sm opacity-80 mb-2">
+              Ajuste a mensagem que será enviada ao modelo de IA antes de buscar sugestões.
             </p>
+            <textarea
+              className="w-full h-32 p-2 border rounded mb-4"
+              value={customMessage}
+              onChange={(e) => setCustomMessage(e.target.value)}
+            />
             <div className="flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowConfirmFetch(false)}
                 className="inline-flex items-center justify-center rounded-md border px-4 py-2 text-sm hover:bg-primary/10"
               >
-                Não
+                Cancelar
               </button>
               <button
                 type="button"
                 onClick={() => {
                   setShowConfirmFetch(false);
-                  // Simula operação longa do "chat-personal"
-                  setIsFetchingAI(true);
-                  console.log("chat-personal: buscando instrucoes_personal.instrucoes_da_ia (stub)");
-                  setTimeout(async () => {
-                    // Após a operação longa, recarrega do banco
-                    await refreshFromSupabase();
-                    setIsFetchingAI(false);
-                    alert("Sugestões da IA atualizadas.");
-                  }, 2000);
+                  handleFetchAISuggestions(customMessage);
                 }}
                 className="inline-flex items-center justify-center rounded-md border bg-primary text-primary-foreground px-4 py-2 text-sm font-semibold hover:brightness-110"
               >
-                Sim
+                Enviar
               </button>
             </div>
           </div>
@@ -398,6 +487,9 @@ export default function PersonalTrainerInstructionsPage() {
           </div>
         </div>
       )}
+
+      {/* Loading Animation */}
+      <LoadingModal isOpen={isFetchingAI || isCreatingPlan} type="workout" />
     </div>
   );
 }

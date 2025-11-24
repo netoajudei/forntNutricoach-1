@@ -286,6 +286,23 @@ export const linkStudentToProfessional = async (authUserId: string, professional
   return { success: true };
 };
 
+export const linkStudentIdToProfessional = async (studentId: string, professionalId: string) => {
+  const supabase = createClient();
+
+  // Chamar RPC de vínculo diretamente com o ID do aluno
+  const { error } = await supabase.rpc('vincular_aluno_profissional', {
+    p_aluno_id: studentId,
+    p_profissional_id: professionalId
+  });
+
+  if (error) {
+    console.error('Erro ao vincular aluno (ID direto):', error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
+};
+
 export const submitSimplifiedOnboarding = async (payload: {
   p_aluno_id: string;
   p_profissional_id: string | null;
