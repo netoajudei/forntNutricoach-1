@@ -23,25 +23,39 @@ const simulateApiCall = <T,>(data: T): Promise<T> => {
 };
 
 export const userService = {
-  getProfile: async (): Promise<UserProfile> => {
+  getProfile: async (targetAlunoId?: string | null): Promise<UserProfile> => {
     const supabase = createClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-    if (userError || !user) {
-      throw new Error('Usuário não autenticado.');
+    let alunoRow;
+
+    if (targetAlunoId) {
+      const { data, error } = await supabase
+        .from('alunos')
+        .select('id, email, nome_completo, role')
+        .eq('id', targetAlunoId)
+        .maybeSingle();
+      if (error) throw new Error(`Erro ao buscar aluno por ID: ${error.message}`);
+      alunoRow = data;
+    } else {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Usuário não autenticado.');
+      }
+
+      // Buscar id do aluno
+      const { data, error: alunoError } = await supabase
+        .from('alunos')
+        .select('id, email, nome_completo, role')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      if (alunoError) {
+        throw new Error(`Erro ao buscar aluno: ${alunoError.message}`);
+      }
+      alunoRow = data;
     }
 
-    // Buscar id do aluno
-    const { data: alunoRow, error: alunoError } = await supabase
-      .from('alunos')
-      .select('id, email, nome_completo, role')
-      .eq('auth_user_id', user.id)
-      .maybeSingle();
-    if (alunoError) {
-      throw new Error(`Erro ao buscar aluno: ${alunoError.message}`);
-    }
     if (!alunoRow) {
       throw new Error('Aluno não encontrado.');
     }
@@ -57,7 +71,6 @@ export const userService = {
 
     const userEmail =
       alunoRow?.email ??
-      user.email ??
       '';
 
     const profile: UserProfile = {
@@ -73,24 +86,38 @@ export const userService = {
     return profile;
   },
 
-  getOnboardingData: async (): Promise<OnboardingData> => {
+  getOnboardingData: async (targetAlunoId?: string | null): Promise<OnboardingData> => {
     const supabase = createClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-    if (userError || !user) {
-      throw new Error('Usuário não autenticado.');
+    let alunoRow;
+
+    if (targetAlunoId) {
+      const { data, error } = await supabase
+        .from('alunos')
+        .select('id, nome_completo, role')
+        .eq('id', targetAlunoId)
+        .maybeSingle();
+      if (error) throw new Error(`Erro ao buscar aluno por ID: ${error.message}`);
+      alunoRow = data;
+    } else {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Usuário não autenticado.');
+      }
+
+      const { data, error: alunoError } = await supabase
+        .from('alunos')
+        .select('id, nome_completo, role')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      if (alunoError) {
+        throw new Error(`Erro ao buscar aluno: ${alunoError.message}`);
+      }
+      alunoRow = data;
     }
 
-    const { data: alunoRow, error: alunoError } = await supabase
-      .from('alunos')
-      .select('id, nome_completo, role')
-      .eq('auth_user_id', user.id)
-      .maybeSingle();
-    if (alunoError) {
-      throw new Error(`Erro ao buscar aluno: ${alunoError.message}`);
-    }
     if (!alunoRow) {
       throw new Error('Aluno não encontrado.');
     }
@@ -203,23 +230,37 @@ export const userService = {
     return onboarding;
   },
 
-  getProfileNotes: async (): Promise<{ nutricionista: string; personal: string }> => {
+  getProfileNotes: async (targetAlunoId?: string | null): Promise<{ nutricionista: string; personal: string }> => {
     const supabase = createClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-    if (userError || !user) {
-      throw new Error('Usuário não autenticado.');
+    let alunoRow;
+
+    if (targetAlunoId) {
+      const { data, error } = await supabase
+        .from('alunos')
+        .select('id')
+        .eq('id', targetAlunoId)
+        .maybeSingle();
+      if (error) throw new Error(`Erro ao buscar aluno por ID: ${error.message}`);
+      alunoRow = data;
+    } else {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Usuário não autenticado.');
+      }
+      const { data, error: alunoError } = await supabase
+        .from('alunos')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      if (alunoError) {
+        throw new Error(`Erro ao buscar aluno: ${alunoError.message}`);
+      }
+      alunoRow = data;
     }
-    const { data: alunoRow, error: alunoError } = await supabase
-      .from('alunos')
-      .select('id')
-      .eq('auth_user_id', user.id)
-      .maybeSingle();
-    if (alunoError) {
-      throw new Error(`Erro ao buscar aluno: ${alunoError.message}`);
-    }
+
     if (!alunoRow) {
       throw new Error('Aluno não encontrado.');
     }
@@ -237,23 +278,37 @@ export const userService = {
     };
   },
 
-  updateProfileNotes: async (payload: { nutricionista?: string; personal?: string }): Promise<void> => {
+  updateProfileNotes: async (payload: { nutricionista?: string; personal?: string }, targetAlunoId?: string | null): Promise<void> => {
     const supabase = createClient();
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser();
-    if (userError || !user) {
-      throw new Error('Usuário não autenticado.');
+    let alunoRow;
+
+    if (targetAlunoId) {
+      const { data, error } = await supabase
+        .from('alunos')
+        .select('id')
+        .eq('id', targetAlunoId)
+        .maybeSingle();
+      if (error) throw new Error(`Erro ao buscar aluno por ID: ${error.message}`);
+      alunoRow = data;
+    } else {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) {
+        throw new Error('Usuário não autenticado.');
+      }
+      const { data, error: alunoError } = await supabase
+        .from('alunos')
+        .select('id')
+        .eq('auth_user_id', user.id)
+        .maybeSingle();
+      if (alunoError) {
+        throw new Error(`Erro ao buscar aluno: ${alunoError.message}`);
+      }
+      alunoRow = data;
     }
-    const { data: alunoRow, error: alunoError } = await supabase
-      .from('alunos')
-      .select('id')
-      .eq('auth_user_id', user.id)
-      .maybeSingle();
-    if (alunoError) {
-      throw new Error(`Erro ao buscar aluno: ${alunoError.message}`);
-    }
+
     if (!alunoRow) {
       throw new Error('Aluno não encontrado.');
     }
