@@ -241,3 +241,46 @@ export const mockOnboardingData: OnboardingData = {
   },
   medidasCorporais: mockMedidasCorporais,
 };
+
+// Mocks para visualização de 30 dias e histórico detalhado
+// Simulando dias com e SEM dados (para demonstrar gaps no gráfico)
+
+export const mockLast30DaysSummary = Array.from({ length: 30 }, (_, i) => {
+  const date = new Date();
+  date.setDate(date.getDate() - (29 - i));
+
+  // Simular alguns dias sem dados (20% de chance de dia vazio)
+  const hasDados = Math.random() > 0.2;
+
+  return {
+    date: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    calories: hasDados ? Math.floor(1800 + Math.random() * 800) : 0,
+    protein: hasDados ? Math.floor(120 + Math.random() * 50) : 0,
+    carbs: hasDados ? Math.floor(150 + Math.random() * 150) : 0,
+    fats: hasDados ? Math.floor(50 + Math.random() * 40) : 0,
+  };
+});
+
+export const mockMonthlyWeeklySummary = [
+  { week: 'Semana 1', calories: 2100, protein: 140, carbs: 200, fats: 70 },
+  { week: 'Semana 2', calories: 2250, protein: 150, carbs: 220, fats: 75 },
+  { week: 'Semana 3', calories: 1950, protein: 130, carbs: 180, fats: 65 },
+  { week: 'Semana 4', calories: 2400, protein: 160, carbs: 250, fats: 80 },
+];
+
+const mealTypes = ['Café da Manhã', 'Almoço', 'Lanche', 'Jantar'];
+export const mockMealsHistory = Array.from({ length: 60 }, (_, i) => {
+  const date = new Date();
+  date.setDate(date.getDate() - Math.floor(i / 2)); // 2 refeições por dia em média nos mocks
+  return {
+    id: `hist-meal-${i}`,
+    date: date.toISOString().split('T')[0],
+    time: `${Math.floor(8 + Math.random() * 12)}:00`,
+    name: mealTypes[i % 4],
+    calories: Math.floor(300 + Math.random() * 500),
+    protein: Math.floor(20 + Math.random() * 40),
+    carbs: Math.floor(30 + Math.random() * 60),
+    fats: Math.floor(10 + Math.random() * 20),
+    description: 'Refeição balanceada mockada'
+  };
+});

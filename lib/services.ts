@@ -288,7 +288,9 @@ export const userService = {
         .select('id')
         .eq('id', targetAlunoId)
         .maybeSingle();
-      if (error) throw new Error(`Erro ao buscar aluno por ID: ${error.message}`);
+      if (error) throw new Error(`Erro ao buscar aluno por ID: ${error.message
+
+        }`);
       alunoRow = data;
     } else {
       const {
@@ -359,6 +361,141 @@ export const dietService = {
   getMonthlyMacroSummary: (): Promise<MonthlyMacroSummary[]> => simulateApiCall(mockMonthlyMacroSummary),
   getAnnualMacroSummary: (): Promise<AnnualMacroSummary[]> => simulateApiCall(mockAnnualMacroSummary),
   getDietMetricsSummary: (): Promise<DietMetricsSummary> => simulateApiCall(mockDietMetricsSummary),
+
+  // Novos métodos para dados reais das views materializadas
+  async getDailyMetrics7Days(alunoId: string) {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+      .from('vw_nutricao_resumo_diario')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('data_registro', { ascending: false })
+      .limit(7);
+
+    if (error) {
+      console.error('Erro ao buscar dados dos últimos 7 dias:', error);
+      throw error;
+    }
+
+    console.log('Dados dos últimos 7 dias recebidos:', data);
+
+    // Retornar os dados no formato esperado pelo gráfico, invertendo a ordem para ficar cronológico
+    const resultado = (data || []).reverse().map((dia: any) => ({
+      date: new Date(dia.data_registro).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+      calories: dia.total_calorias_consumidas || 0,
+      protein: dia.total_proteina_consumida || 0,
+      carbs: dia.total_carboidrato_consumido || 0,
+      fats: dia.total_gordura_consumida || 0,
+      meta_calorias: dia.meta_calorias ? parseInt(dia.meta_calorias) : null,
+      meta_proteina: dia.meta_proteina ? parseInt(dia.meta_proteina) : null,
+      meta_carbs: dia.meta_carboidratos ? parseInt(dia.meta_carboidratos) : null,
+    }));
+
+    console.log('Dados dos últimos 7 dias formatados:', resultado);
+    return resultado;
+  },
+
+  async getDailyMetrics30Days(alunoId: string) {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+      .from('vw_nutricao_resumo_diario')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('data_registro', { ascending: false })
+      .limit(30);
+
+    if (error) {
+      console.error('Erro ao buscar dados diários:', error);
+      throw error;
+    }
+
+    console.log('Dados diários recebidos:', data);
+
+    // Retornar os dados no formato esperado pelo gráfico, invertendo a ordem para ficar cronológico
+    const resultado = (data || []).reverse().map((dia: any) => ({
+      date: new Date(dia.data_registro).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+      calories: dia.total_calorias_consumidas || 0,
+      protein: dia.total_proteina_consumida || 0,
+      carbs: dia.total_carboidrato_consumido || 0,
+      fats: dia.total_gordura_consumida || 0,
+      meta_calorias: dia.meta_calorias ? parseInt(dia.meta_calorias) : null,
+      meta_proteina: dia.meta_proteina ? parseInt(dia.meta_proteina) : null,
+      meta_carbs: dia.meta_carboidratos ? parseInt(dia.meta_carboidratos) : null,
+    }));
+
+    console.log('Dados formatados para o gráfico:', resultado);
+    return resultado;
+  },
+
+  async getWeeklyMetricsForMonth(alunoId: string, mesInicio: string) {
+    const supabase = createClient();
+
+    // Calcular o primeiro e último dia do mês
+    const mesDate = new Date(mesInicio);
+    const mesAno = mesDate.getFullYear();
+    const mesNum = mesDate.getMonth() + 1;
+    const primeiroDia = `${mesAno}-${String(mesNum).padStart(2, '0')}-01`;
+    const ultimoDia = new Date(mesAno, mesNum, 0).toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+      .from('vw_nutricao_resumo_semanal')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .gte('semana_inicio', primeiroDia)
+      .lte('semana_inicio', ultimoDia)
+      .order('semana_inicio', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map((semana: any) => {
+      const inicio = new Date(semana.semana_inicio).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      const fim = new Date(semana.semana_fim).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+
+      return {
+        week: `${inicio} - ${fim}`,
+        // Totais acumulados da semana
+        calories: semana.total_calorias_consumidas || 0,
+        protein: semana.total_proteina_consumida || 0,
+        carbs: semana.total_carboidrato_consumido || 0,
+        fats: semana.total_gordura_consumida || 0,
+        // Metas da semana
+        meta_calorias: semana.meta_calorias_semana ? parseInt(semana.meta_calorias_semana) : null,
+        meta_proteina: semana.meta_proteina_semana ? parseInt(semana.meta_proteina_semana) : null,
+        meta_carbs: semana.meta_carboidratos_semana ? parseInt(semana.meta_carboidratos_semana) : null,
+      };
+    });
+  },
+
+  async getMonthlyMetrics(alunoId: string) {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+      .from('vw_nutricao_resumo_mensal')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('mes_inicio', { ascending: false }); // Ordem decrescente (mais recente primeiro)
+
+    if (error) throw error;
+
+    console.log('Dados mensais recebidos (primeiro registro):', data?.[0]);
+
+    const resultado = (data || []).map((mes: any) => ({
+      month: new Date(mes.mes_inicio).toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' }),
+      calories: mes.total_calorias_consumidas || 0,
+      protein: mes.total_proteina_consumida || 0,
+      carbs: mes.total_carboidrato_consumido || 0,
+      fats: mes.total_gordura_consumida || 0,
+      // Percentuais (nomes corretos da view)
+      percentual_calorias: mes.percentual_calorias || 0,
+      percentual_proteina: mes.percentual_proteina || 0,
+      percentual_carbs: mes.percentual_carboidratos || 0,
+    }));
+
+    console.log('Dados formatados (primeiro registro):', resultado?.[0]);
+    return resultado;
+  },
 };
 
 export const workoutService = {
@@ -367,6 +504,120 @@ export const workoutService = {
   getWorkoutMetricsSummary: (): Promise<WorkoutMetricsSummary> => simulateApiCall(mockWorkoutMetricsSummary),
   getExerciseLoadHistory: (): Promise<ExerciseLoadHistory[]> => simulateApiCall(mockExerciseLoadHistory),
   getWeeklyCompletionHistory: (): Promise<WeeklyCompletionHistory[]> => simulateApiCall(mockWeeklyCompletionHistory),
+
+  // Novos métodos para dados reais de treino
+  async getMuscleGroupEvolution(alunoId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('view_grafico_anual_musculos')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('data_inicio_semana', { ascending: true }); // Changed from data_treino
+
+    if (error) {
+      console.error('Erro ao buscar evolução por grupo muscular:', JSON.stringify(error, null, 2));
+      console.error('Detalhes do erro:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
+      throw error;
+    }
+    return data || [];
+  },
+
+  async getExerciseOptions(alunoId: string) {
+    const supabase = createClient();
+    // Buscar exercícios únicos realizados pelo aluno
+    const { data, error } = await supabase
+      .from('view_historico_completo_treino')
+      // distinct simulado via JS no cliente pois distinct select as vezes é chato no supabase-js sem RPC
+      .select('exercicio_id, nome_exercicio')
+      .eq('aluno_id', alunoId);
+
+    if (error) {
+      console.error('Erro ao buscar opções de exercícios:', JSON.stringify(error, null, 2));
+      return [];
+    }
+
+    // Filtrar únicos pelo ID
+    const uniqueExercises = new Map();
+    (data || []).forEach((item: any) => {
+      // Preferir nome_exercicio se disponível
+      const name = item.nome_exercicio || "Exercício sem nome";
+      if (!uniqueExercises.has(item.exercicio_id)) {
+        uniqueExercises.set(item.exercicio_id, { id: item.exercicio_id, name });
+      }
+    });
+
+    return Array.from(uniqueExercises.values());
+  },
+
+  async getExercisePerformance(alunoId: string, exercicioId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('view_historico_completo_treino')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .eq('exercicio_id', exercicioId)
+      .order('data_treino', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao buscar desempenho dos exercícios:', JSON.stringify(error, null, 2));
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  async getFullWorkoutHistory(alunoId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('view_historico_completo_treino')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('data_treino', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao buscar histórico completo:', JSON.stringify(error, null, 2));
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  async getTrainingFrequency(alunoId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('vw_treino_resumo_semanal')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('semana_inicio', { ascending: false }); // Do mais recente para o mais antigo
+
+    if (error) {
+      console.error('Erro ao buscar frequência semanal:', JSON.stringify(error, null, 2));
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  async getMonthlyTrainingFrequency(alunoId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('vw_treino_resumo_mensal')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .order('mes_inicio', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar frequência mensal:', JSON.stringify(error, null, 2));
+      throw error;
+    }
+
+    return data || [];
+  }
 };
 
 export const progressService = {
@@ -374,4 +625,44 @@ export const progressService = {
   getProgressSummary: (): Promise<ProgressSummary> => simulateApiCall(mockProgressSummary),
   getBodyMetricsHistory: (): Promise<BodyMetricsHistoryEntry[]> => simulateApiCall(mockBodyMetricsHistory),
   getBodyMetricsSummary: (): Promise<BodyMetricsSummary> => simulateApiCall(mockBodyMetricsSummary),
+
+  async getDashboardSummary(alunoId: string): Promise<ProgressSummary> {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('vw_dashboard_home')
+      .select('*')
+      .eq('aluno_id', alunoId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Erro ao buscar resumo do dashboard:', error);
+      throw error;
+    }
+
+    // Default values if no data or nulls
+    const stats = data || {};
+
+    // Calculate diet adherence approx (calories consumed vs goal)
+    // Note: This is an approximation. A real adherence metric might be more complex.
+    const calConsumed = parseFloat(stats.media_calorias_hoje || '0');
+    const calGoal = parseFloat(stats.meta_calorias || '1'); // prevent div by zero
+    const dietAdherence = calGoal > 0 ? Math.round((calConsumed / calGoal) * 100) : 0;
+
+    return {
+      weight: {
+        current: parseFloat(stats.peso_atual || '0'),
+        change: parseFloat(stats.variacao_peso_semana || '0')
+      },
+      training: {
+        completed: parseInt(stats.treinos_executados || '0'),
+        total: parseInt(stats.meta_treinos || '0')
+      },
+      diet: {
+        adherence: dietAdherence
+      },
+      goal: {
+        progress: 0 // Not in view yet
+      }
+    };
+  }
 };
